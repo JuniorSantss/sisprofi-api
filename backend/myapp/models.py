@@ -2,7 +2,7 @@ from django.db import models
 
 
 class Programa(models.Model):
-    nome = models.CharField(max_length=50)
+    nome = models.CharField(max_length=50, unique=True)
     descricao = models.CharField(max_length=255)
 
     def __str__(self):
