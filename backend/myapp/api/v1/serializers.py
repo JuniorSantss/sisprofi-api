@@ -72,7 +72,6 @@ class AgendamentoSerializer(serializers.ModelSerializer):
 
         return data
 
-
 class AtendimentoSerializer(serializers.ModelSerializer):
     class Meta:
         model = Atendimento
@@ -125,16 +124,31 @@ class PendenciaSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
     def validate(self, data):
-        atendimento = data.get('atendimento')
+        atendimento = data.get(
+            'atendimento',
+            getattr(self.instance, 'atendimento', None)
+        )
 
-        if atendimento.status not in ['Em andamento', 'Com pendência']:
+        if atendimento is None:
             raise serializers.ValidationError(
-                'Só é possível registrar pendência em um atendimento ativo.'
+                'Atendimento não encontrado.'
             )
+
+        if atendimento.status not in [
+            'Em andamento',
+            'Com pendência'
+        ]:
+            raise serializers.ValidationError(
+                'Só é possível registrar ou atualizar pendência '
+                'em um atendimento ativo.'
+            )
+
         return data
 
     def create(self, validated_data):
-        pendencia = Pendencia.objects.create(**validated_data)
+        pendencia = Pendencia.objects.create(
+            **validated_data
+        )
 
         atendimento = pendencia.atendimento
         atendimento.status = 'Com pendência'
