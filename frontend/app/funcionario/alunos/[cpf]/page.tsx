@@ -263,7 +263,7 @@ export default function DetalhesAlunoPage() {
             ) : (
               <>
                 {/* DADOS DO ALUNO */}
-                <section className="mt-7 shrink-0 rounded-xl border border-[#0B5598] bg-[#F4F8FC] p-5">
+                <section className="mt-5 shrink-0 rounded-xl border border-[#0B5598] bg-[#F4F8FC] p-4">
                   <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
                     <div>
                       <p className="text-sm font-medium text-[#6E8CA8]">
@@ -282,7 +282,7 @@ export default function DetalhesAlunoPage() {
                     </div>
                   </div>
 
-                  <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                  <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
                     <InfoBox
                       titulo="CPF"
                       valor={formatarCpf(aluno.cpf_aluno)}
@@ -300,8 +300,8 @@ export default function DetalhesAlunoPage() {
                 </section>
 
                 {/* HISTÓRICO */}
-                <section className="mt-6 flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl border border-[#0B5598] bg-white">
-                  <div className="shrink-0 border-b border-[#B9CEE2] px-5 py-4">
+                <section className="mt-4 flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl border border-[#0B5598] bg-white">
+                  <div className="shrink-0 border-b border-[#B9CEE2] px-5 py-3">
                     <h3 className="text-lg font-extrabold text-[#064F91]">
                       Histórico de atendimentos
                     </h3>
@@ -311,7 +311,7 @@ export default function DetalhesAlunoPage() {
                     </p>
                   </div>
 
-                  <div className="min-h-0 flex-1 overflow-y-auto p-4 sm:p-5">
+                  <div className="min-h-0 flex-1 overflow-y-auto p-5 sm:p-6">
                     {historico.length === 0 ? (
                       <div className="flex min-h-[180px] items-center justify-center rounded-xl border border-dashed border-[#B9CEE2] bg-[#F8FBFE] text-center text-sm text-[#6E8CA8]">
                         Este aluno ainda não possui atendimentos registrados.
@@ -352,7 +352,7 @@ export default function DetalhesAlunoPage() {
                                 />
                               </div>
 
-                              <div className="mt-5 border-t border-[#E1EBF4] pt-4">
+                              <div className="mt-6 border-t border-[#E1EBF4] pt-5">
                                 <div className="flex items-center justify-between">
                                   <h5 className="text-sm font-extrabold text-[#064F91]">
                                     Pendências
@@ -418,7 +418,7 @@ export default function DetalhesAlunoPage() {
 
 function InfoBox({ titulo, valor }: { titulo: string; valor: string }) {
   return (
-    <div className="rounded-lg border border-[#B9CEE2] bg-white px-4 py-3">
+    <div className="rounded-lg border border-[#B9CEE2] bg-white px-3 py-2">
       <p className="text-xs font-medium text-[#6E8CA8]">{titulo}</p>
 
       <p className="mt-1 break-words text-sm font-semibold text-[#064F91]">
