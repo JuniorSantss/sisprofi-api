@@ -369,8 +369,8 @@ export default function AtendimentosPage() {
   const editandoAtendimento = atendimentoSelecionadoId !== null;
 
   return (
-    <main className="h-screen overflow-hidden bg-[#F8F9FF] px-4 py-6 sm:px-6">
-      <div className="mx-auto flex h-full w-full max-w-[1440px] overflow-hidden rounded-2xl border border-[#0B5598] bg-white">
+    <main className="h-screen w-screen overflow-hidden bg-white">
+      <div className="flex h-full w-full overflow-hidden bg-white">
         {/* SIDEBAR */}
 
         <aside className="relative hidden w-[22%] min-w-[230px] max-w-[290px] shrink-0 overflow-hidden bg-[#0B5598] text-white lg:flex lg:flex-col">
@@ -451,6 +451,7 @@ export default function AtendimentosPage() {
 
               <button
                 type="button"
+                onClick={() => router.push("/funcionario/perfil")}
                 className="flex h-[54px] w-full max-w-[240px] cursor-pointer items-center gap-3 rounded-xl border border-[#0B5598] bg-[#F4F8FC] px-4 text-[#064F91] transition-all duration-200 hover:-translate-y-[1px] hover:bg-[#EAF2F9] hover:shadow-sm"
               >
                 <ProfileIcon />

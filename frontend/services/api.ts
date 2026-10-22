@@ -112,7 +112,7 @@ export async function login(username: string, password: string) {
 }
 
 /* =========================
-   ALUNOS
+  ALUNOS
 ========================= */
 
 export async function buscarAlunos() {
@@ -120,7 +120,7 @@ export async function buscarAlunos() {
 }
 
 /* =========================
-   PROGRAMAS
+  PROGRAMAS
 ========================= */
 
 export async function buscarProgramas() {
@@ -128,7 +128,7 @@ export async function buscarProgramas() {
 }
 
 /* =========================
-   AGENDAMENTOS
+  AGENDAMENTOS
 ========================= */
 
 export async function buscarAgendamentos() {
@@ -136,7 +136,7 @@ export async function buscarAgendamentos() {
 }
 
 /* =========================
-   FUNCIONÁRIOS
+  FUNCIONÁRIOS
 ========================= */
 
 export async function buscarFuncionarios() {
@@ -144,7 +144,7 @@ export async function buscarFuncionarios() {
 }
 
 /* =========================
-   ATENDIMENTOS
+  ATENDIMENTOS
 ========================= */
 
 export async function buscarAtendimentos() {
@@ -180,7 +180,7 @@ export async function atualizarAtendimento(
 }
 
 /* =========================
-   PENDÊNCIAS
+  PENDÊNCIAS
 ========================= */
 
 export async function buscarPendencias() {
@@ -196,6 +196,32 @@ export async function criarPendencia(dados: {
   return apiRequest("/pendencias/", {
     method: "POST",
 
+    body: JSON.stringify(dados),
+  });
+}
+
+export async function atualizarPendencia(
+  id: number,
+  dados: {
+    status?: string;
+    descricao?: string;
+  },
+) {
+  return apiRequest(`/pendencias/${id}/`, {
+    method: "PATCH",
+    body: JSON.stringify(dados),
+  });
+}
+
+export async function atualizarFuncionario(
+  cpf: string,
+  dados: {
+    nome?: string;
+    email?: string;
+  },
+) {
+  return apiRequest(`/funcionarios/${cpf}/`, {
+    method: "PATCH",
     body: JSON.stringify(dados),
   });
 }

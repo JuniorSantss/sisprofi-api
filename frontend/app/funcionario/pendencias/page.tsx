@@ -6,15 +6,12 @@ import { useRouter } from "next/navigation";
 import type { ReactNode } from "react";
 
 import {
-  buscarPendencias,
-  buscarAtendimentos,
+  atualizarPendencia,
   buscarAgendamentos,
   buscarAlunos,
+  buscarAtendimentos,
+  buscarPendencias,
 } from "@/services/api";
-
-/* =========================
-   TIPOS
-========================= */
 
 type Aluno = {
   cpf_aluno: string;
@@ -55,10 +52,6 @@ type PendenciaTela = PendenciaAPI & {
   nomeAluno: string;
 };
 
-/* =========================
-   PÁGINA
-========================= */
-
 export default function PendenciasPage() {
   const router = useRouter();
 
@@ -66,65 +59,64 @@ export default function PendenciasPage() {
   const [filtroStatus, setFiltroStatus] = useState("Todas");
 
   const [carregando, setCarregando] = useState(true);
-  const [erro, setErro] = useState("");
+  const [atualizandoId, setAtualizandoId] = useState<number | null>(null);
 
-  /* =========================
-     CARREGAR API
-  ========================= */
+  const [erro, setErro] = useState("");
+  const [sucesso, setSucesso] = useState("");
+
+  async function carregarDados() {
+    try {
+      setCarregando(true);
+      setErro("");
+
+      const [
+        dadosPendencias,
+        dadosAtendimentos,
+        dadosAgendamentos,
+        dadosAlunos,
+      ] = await Promise.all([
+        buscarPendencias(),
+        buscarAtendimentos(),
+        buscarAgendamentos(),
+        buscarAlunos(),
+      ]);
+
+      const lista: PendenciaTela[] = dadosPendencias.map(
+        (pendencia: PendenciaAPI) => {
+          const atendimento = dadosAtendimentos.find(
+            (item: Atendimento) => item.id === pendencia.atendimento,
+          );
+
+          const agendamento = dadosAgendamentos.find(
+            (item: Agendamento) => item.id === atendimento?.agendamento,
+          );
+
+          const aluno = dadosAlunos.find(
+            (item: Aluno) => item.cpf_aluno === agendamento?.aluno,
+          );
+
+          return {
+            ...pendencia,
+            nomeAluno: aluno?.nome || "Aluno não encontrado",
+          };
+        },
+      );
+
+      setPendencias(lista);
+    } catch (error) {
+      setErro(
+        error instanceof Error
+          ? error.message
+          : "Não foi possível carregar as pendências.",
+      );
+    } finally {
+      setCarregando(false);
+    }
+  }
 
   useEffect(() => {
-    async function carregarDados() {
-      try {
-        setCarregando(true);
-        setErro("");
-
-        const [
-          dadosPendencias,
-          dadosAtendimentos,
-          dadosAgendamentos,
-          dadosAlunos,
-        ] = await Promise.all([
-          buscarPendencias(),
-          buscarAtendimentos(),
-          buscarAgendamentos(),
-          buscarAlunos(),
-        ]);
-
-        const lista: PendenciaTela[] = dadosPendencias.map(
-          (pendencia: PendenciaAPI) => {
-            const atendimento = dadosAtendimentos.find(
-              (item: Atendimento) => item.id === pendencia.atendimento,
-            );
-
-            const agendamento = dadosAgendamentos.find(
-              (item: Agendamento) => item.id === atendimento?.agendamento,
-            );
-
-            const aluno = dadosAlunos.find(
-              (item: Aluno) => item.cpf_aluno === agendamento?.aluno,
-            );
-
-            return {
-              ...pendencia,
-              nomeAluno: aluno?.nome || "Aluno não encontrado",
-            };
-          },
-        );
-
-        setPendencias(lista);
-      } catch {
-        setErro("Não foi possível carregar as pendências.");
-      } finally {
-        setCarregando(false);
-      }
-    }
-
     carregarDados();
   }, []);
-
-  /* =========================
-     FILTRO
-  ========================= */
 
   const pendenciasFiltradas = useMemo(() => {
     if (filtroStatus === "Todas") {
@@ -134,10 +126,6 @@ export default function PendenciasPage() {
     return pendencias.filter((pendencia) => pendencia.status === filtroStatus);
   }, [pendencias, filtroStatus]);
 
-  /* =========================
-     STATUS DISPONÍVEIS
-  ========================= */
-
   const statusDisponiveis = useMemo(() => {
     const status = pendencias
       .map((pendencia) => pendencia.status)
@@ -146,15 +134,43 @@ export default function PendenciasPage() {
     return Array.from(new Set(status));
   }, [pendencias]);
 
+  async function concluirPendencia(pendenciaId: number) {
+    setErro("");
+    setSucesso("");
+
+    try {
+      setAtualizandoId(pendenciaId);
+
+      await atualizarPendencia(pendenciaId, {
+        status: "Concluída",
+      });
+
+      setSucesso("Pendência concluída com sucesso.");
+
+      await carregarDados();
+    } catch (error) {
+      setErro(
+        error instanceof Error
+          ? error.message
+          : "Não foi possível concluir a pendência.",
+      );
+    } finally {
+      setAtualizandoId(null);
+    }
+  }
+
+  function pendenciaEstaConcluida(status: string) {
+    const normalizado = status.trim().toLowerCase();
+
+    return normalizado === "concluída" || normalizado === "concluida";
+  }
+
   return (
-    <main className="h-screen overflow-hidden bg-[#F8F9FF] px-4 py-6 sm:px-6">
-      <div className="mx-auto flex h-full w-full max-w-[1440px] overflow-hidden rounded-2xl border border-[#0B5598] bg-white">
-        {/* =========================
-            SIDEBAR
-        ========================= */}
+    <main className="h-screen w-screen overflow-hidden bg-white">
+      <div className="flex h-full w-full overflow-hidden bg-white">
+        {/* SIDEBAR */}
 
         <aside className="relative hidden w-[22%] min-w-[230px] max-w-[290px] shrink-0 overflow-hidden bg-[#0B5598] text-white lg:flex lg:flex-col">
-          {/* FAIXA LARANJA */}
           <div className="absolute left-0 top-0 z-20 h-full w-[14px] bg-[#FF681D]" />
 
           <div className="relative z-10 flex h-full flex-col px-6 pt-10 xl:px-8 xl:pt-12">
@@ -196,7 +212,6 @@ export default function PendenciasPage() {
               />
             </nav>
 
-            {/* IMAGEM */}
             <div className="pointer-events-none mt-auto -mx-6 xl:-mx-8">
               <Image
                 src="/images/predio-login.png"
@@ -210,9 +225,7 @@ export default function PendenciasPage() {
           </div>
         </aside>
 
-        {/* =========================
-            CONTEÚDO
-        ========================= */}
+        {/* CONTEÚDO */}
 
         <section className="min-w-0 flex-1 overflow-hidden bg-white">
           <div className="flex h-full flex-col px-5 py-7 sm:px-6 md:px-8 xl:px-10 xl:py-10">
@@ -225,15 +238,15 @@ export default function PendenciasPage() {
                 </h2>
 
                 <p className="mt-3 text-base text-[#064F91] xl:text-lg">
-                  Acompanhe as pendências registradas nos atendimentos.
+                  Acompanhe e conclua as pendências registradas nos
+                  atendimentos.
                 </p>
               </div>
 
-              {/* PERFIL */}
-
               <button
                 type="button"
-                className="flex h-[54px] w-full max-w-[240px] cursor-pointer items-center gap-3 rounded-xl border border-[#0B5598] bg-[#F4F8FC] px-4 text-[#064F91] transition-all duration-200 hover:-translate-y-[1px] hover:bg-[#EAF2F9] hover:shadow-sm active:translate-y-0"
+                onClick={() => router.push("/funcionario/perfil")}
+                className="flex h-[54px] w-full max-w-[240px] cursor-pointer items-center gap-3 rounded-xl border border-[#0B5598] bg-[#F4F8FC] px-4 text-[#064F91] transition-all duration-200 hover:-translate-y-[1px] hover:bg-[#EAF2F9] hover:shadow-sm"
               >
                 <ProfileIcon />
 
@@ -243,9 +256,7 @@ export default function PendenciasPage() {
               </button>
             </header>
 
-            {/* =========================
-                QUADRO PRINCIPAL
-            ========================= */}
+            {/* QUADRO PRINCIPAL */}
 
             <section className="mt-7 flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl border border-[#0B5598] bg-white p-4 sm:p-5">
               {/* FILTRO */}
@@ -270,7 +281,7 @@ export default function PendenciasPage() {
                 </select>
               </div>
 
-              {/* ERRO */}
+              {/* MENSAGENS */}
 
               {erro && (
                 <div className="mt-4 shrink-0 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
@@ -278,12 +289,16 @@ export default function PendenciasPage() {
                 </div>
               )}
 
-              {/* =========================
-                  TABELA
-              ========================= */}
+              {sucesso && (
+                <div className="mt-4 shrink-0 rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700">
+                  {sucesso}
+                </div>
+              )}
+
+              {/* TABELA */}
 
               <div className="mt-6 min-h-0 flex-1 overflow-auto">
-                <table className="w-full min-w-[650px] border-collapse text-left text-[#064F91]">
+                <table className="w-full min-w-[780px] border-collapse text-left text-[#064F91]">
                   <thead className="sticky top-0 z-10">
                     <tr className="border border-[#B9CEE2] bg-[#F0F4F8]">
                       <th className="px-4 py-3 text-[13px] font-medium">
@@ -297,6 +312,10 @@ export default function PendenciasPage() {
                       <th className="px-4 py-3 text-[13px] font-medium">
                         Status
                       </th>
+
+                      <th className="px-4 py-3 text-center text-[13px] font-medium">
+                        Ação
+                      </th>
                     </tr>
                   </thead>
 
@@ -304,35 +323,62 @@ export default function PendenciasPage() {
                     {carregando ? (
                       <tr>
                         <td
-                          colSpan={3}
+                          colSpan={4}
                           className="px-5 py-12 text-center text-sm text-[#064F91]"
                         >
                           Carregando pendências...
                         </td>
                       </tr>
                     ) : pendenciasFiltradas.length > 0 ? (
-                      pendenciasFiltradas.map((pendencia) => (
-                        <tr
-                          key={pendencia.id}
-                          className="border-b border-[#C8D9E8] transition-colors duration-200 hover:bg-[#F8FBFE]"
-                        >
-                          <td className="px-4 py-3 text-[13px]">
-                            {pendencia.nomeAluno}
-                          </td>
+                      pendenciasFiltradas.map((pendencia) => {
+                        const concluida = pendenciaEstaConcluida(
+                          pendencia.status,
+                        );
 
-                          <td className="px-4 py-3 text-[13px]">
-                            {pendencia.descricao}
-                          </td>
+                        const atualizando = atualizandoId === pendencia.id;
 
-                          <td className="px-4 py-3">
-                            <StatusBadge status={pendencia.status} />
-                          </td>
-                        </tr>
-                      ))
+                        return (
+                          <tr
+                            key={pendencia.id}
+                            className="border-b border-[#C8D9E8] transition-colors duration-200 hover:bg-[#F8FBFE]"
+                          >
+                            <td className="px-4 py-3 text-[13px]">
+                              {pendencia.nomeAluno}
+                            </td>
+
+                            <td className="px-4 py-3 text-[13px]">
+                              {pendencia.descricao}
+                            </td>
+
+                            <td className="px-4 py-3">
+                              <StatusBadge status={pendencia.status} />
+                            </td>
+
+                            <td className="px-4 py-2 text-center">
+                              {concluida ? (
+                                <span className="inline-flex rounded-lg bg-[#E9F5ED] px-4 py-2 text-xs font-semibold text-[#26804A]">
+                                  Concluída
+                                </span>
+                              ) : (
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    concluirPendencia(pendencia.id)
+                                  }
+                                  disabled={atualizando}
+                                  className="cursor-pointer rounded-lg bg-[#FF681D] px-4 py-2 text-sm font-extrabold text-white shadow-sm transition-all duration-200 hover:-translate-y-[1px] hover:bg-[#E95A0D] hover:shadow-md active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
+                                >
+                                  {atualizando ? "Concluindo..." : "Concluir"}
+                                </button>
+                              )}
+                            </td>
+                          </tr>
+                        );
+                      })
                     ) : (
                       <tr>
                         <td
-                          colSpan={3}
+                          colSpan={4}
                           className="px-5 py-12 text-center text-sm text-gray-400"
                         >
                           Nenhuma pendência encontrada.
@@ -350,7 +396,7 @@ export default function PendenciasPage() {
               <button
                 type="button"
                 onClick={() => router.back()}
-                className="h-[46px] min-w-[125px] cursor-pointer rounded-lg border border-[#2E71B8] bg-white px-7 text-sm font-extrabold text-[#064F91] shadow-sm transition-all duration-200 hover:-translate-y-[1px] hover:bg-[#F3F8FD] hover:shadow-md active:translate-y-0 active:scale-[0.98]"
+                className="h-[46px] min-w-[125px] cursor-pointer rounded-lg border border-[#2E71B8] bg-white px-7 text-sm font-extrabold text-[#064F91] shadow-sm transition-all duration-200 hover:-translate-y-[1px] hover:bg-[#F3F8FD] hover:shadow-md active:scale-[0.98]"
               >
                 Voltar
               </button>
@@ -393,29 +439,26 @@ function MenuButton({
 }
 
 function StatusBadge({ status }: { status: string }) {
-  const statusNormalizado = status.trim().toLowerCase();
+  const normalizado = status.trim().toLowerCase();
 
-  if (statusNormalizado === "concluída" || statusNormalizado === "concluida") {
+  if (normalizado === "concluída" || normalizado === "concluida") {
     return (
-      <span className="inline-flex rounded-full bg-[#D9F0E1] px-4 py-1 text-[12px] text-[#26804A]">
+      <span className="inline-flex rounded-full bg-[#D9F0E1] px-4 py-1 text-[12px] font-medium text-[#26804A]">
         {status}
       </span>
     );
   }
 
-  if (
-    statusNormalizado === "em análise" ||
-    statusNormalizado === "em analise"
-  ) {
+  if (normalizado === "em análise" || normalizado === "em analise") {
     return (
-      <span className="inline-flex rounded-full bg-[#FFE3D0] px-4 py-1 text-[12px] text-[#FF681D]">
+      <span className="inline-flex rounded-full bg-[#FFE3D0] px-4 py-1 text-[12px] font-medium text-[#FF681D]">
         {status}
       </span>
     );
   }
 
   return (
-    <span className="inline-flex rounded-full bg-[#FFD8DB] px-4 py-1 text-[12px] text-[#E32E3D]">
+    <span className="inline-flex rounded-full bg-[#FFD8DB] px-4 py-1 text-[12px] font-medium text-[#E32E3D]">
       {status}
     </span>
   );
@@ -521,6 +564,7 @@ function ChartIcon() {
       strokeWidth="1.7"
     >
       <path d="M4 3v18h17" />
+
       <path d="M7 17c2-1 2-8 5-8 3 0 2 7 7 7" />
     </svg>
   );
