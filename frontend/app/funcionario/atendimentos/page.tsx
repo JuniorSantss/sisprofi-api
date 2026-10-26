@@ -490,6 +490,82 @@ export default function AtendimentosPage() {
 
   const editandoAtendimento = atendimentoSelecionadoId !== null;
 
+  async function salvarPendenciaModal() {
+    setErro("");
+    setSucesso("");
+
+    if (!atendimentoModal) {
+      setErro("Nenhum atendimento selecionado.");
+      return;
+    }
+
+    if (!descricaoPendencia.trim()) {
+      setErro("Informe a descrição da pendência.");
+      return;
+    }
+
+    try {
+      setSalvando(true);
+
+      await criarPendencia({
+        atendimento: atendimentoModal.id,
+        descricao: descricaoPendencia.trim(),
+        status: "Aberta",
+        data_criacao: obterDataHoje(),
+      });
+
+      setSucesso("Pendência registrada com sucesso.");
+
+      setDescricaoPendencia("");
+      setModalPendencia(false);
+      setAtendimentoModal(null);
+
+      await carregarDados();
+    } catch (error) {
+      setErro(
+        error instanceof Error
+          ? error.message
+          : "Não foi possível registrar a pendência.",
+      );
+    } finally {
+      setSalvando(false);
+    }
+  }
+
+  async function salvarStatusModal() {
+    setErro("");
+    setSucesso("");
+
+    if (!atendimentoModal) {
+      setErro("Nenhum atendimento selecionado.");
+      return;
+    }
+
+    try {
+      setSalvando(true);
+
+      await atualizarAtendimento(atendimentoModal.id, {
+        status,
+        descricao: atendimentoModal.descricao,
+      });
+
+      setSucesso("Status atualizado com sucesso.");
+
+      setModalStatus(false);
+      setAtendimentoModal(null);
+
+      await carregarDados();
+    } catch (error) {
+      setErro(
+        error instanceof Error
+          ? error.message
+          : "Não foi possível atualizar o status.",
+      );
+    } finally {
+      setSalvando(false);
+    }
+  }
+
   return (
     <main className="h-screen w-screen overflow-hidden bg-white">
       <div className="flex h-full w-full overflow-hidden bg-white">
@@ -754,65 +830,64 @@ export default function AtendimentosPage() {
                             <AcaoCard
                               texto="Ver detalhes"
                               onClick={() => {
+                                setModalPendencia(false);
+                                setModalStatus(false);
+
                                 setAtendimentoModal(atendimento);
                                 setModalDetalhes(true);
                               }}
                             />
 
-                            <AcaoCard
-                              texto="Adicionar pendência"
-                              onClick={() => {
-                                setAtendimentoModal(atendimento);
-                                setDescricaoPendencia("");
-                                setModalPendencia(true);
-                              }}
-                            />
+                            {atendimento.status !== "Concluído" && (
+                              <AcaoCard
+                                texto="Adicionar pendência"
+                                onClick={() => {
+                                  setModalDetalhes(false);
+                                  setModalStatus(false);
 
-                            <AcaoCard
-                              texto="Atualizar status"
-                              onClick={() => {
-                                setAtendimentoModal(atendimento);
-                                setStatus(atendimento.status);
-                                setModalStatus(true);
-                              }}
-                            />
+                                  setAtendimentoModal(atendimento);
+                                  setDescricaoPendencia("");
+                                  setModalPendencia(true);
+                                }}
+                              />
+                            )}
 
-                            <button
-                              type="button"
-                              disabled={
-                                salvando || atendimento.status === "Concluído"
-                              }
-                              onClick={async () => {
-                                setErro("");
-                                setSucesso("");
+                            {atendimento.status !== "Concluído" && (
+                              <button
+                                type="button"
+                                onClick={async () => {
+                                  setErro("");
+                                  setSucesso("");
 
-                                try {
-                                  setSalvando(true);
+                                  try {
+                                    setSalvando(true);
 
-                                  await atualizarAtendimento(atendimento.id, {
-                                    status: "Concluído",
-                                    descricao: atendimento.descricao,
-                                  });
+                                    await atualizarAtendimento(atendimento.id, {
+                                      status: "Concluído",
+                                      descricao: atendimento.descricao,
+                                    });
 
-                                  setSucesso(
-                                    `Atendimento de ${aluno.nome} concluído com sucesso.`,
-                                  );
+                                    setSucesso(
+                                      `Atendimento de ${aluno.nome} concluído com sucesso.`,
+                                    );
 
-                                  await carregarDados();
-                                } catch (error) {
-                                  setErro(
-                                    error instanceof Error
-                                      ? error.message
-                                      : "Não foi possível concluir o atendimento.",
-                                  );
-                                } finally {
-                                  setSalvando(false);
-                                }
-                              }}
-                              className="h-[36px] rounded-lg bg-[#FF681D] px-5 text-xs font-extrabold text-white transition-all duration-200 hover:bg-[#E95A0D] disabled:cursor-not-allowed disabled:opacity-50"
-                            >
-                              Concluir atendimento
-                            </button>
+                                    await carregarDados();
+                                  } catch (error) {
+                                    setErro(
+                                      error instanceof Error
+                                        ? error.message
+                                        : "Não foi possível concluir o atendimento.",
+                                    );
+                                  } finally {
+                                    setSalvando(false);
+                                  }
+                                }}
+                                disabled={salvando}
+                                className="flex h-[38px] cursor-pointer items-center justify-center rounded-lg bg-[#FF681D] px-5 text-xs font-extrabold text-white shadow-sm transition-all duration-200 hover:-translate-y-[2px] hover:bg-[#E95A0D] hover:shadow-md active:translate-y-0 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
+                              >
+                                Concluir atendimento
+                              </button>
+                            )}
                           </div>
                         </article>
                       );
@@ -824,6 +899,8 @@ export default function AtendimentosPage() {
           </div>
         </section>
       </div>
+      {/* MODAL DETALHES */}
+
       {modalDetalhes && dadosAtendimentoModal && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/55 px-4"
@@ -849,7 +926,7 @@ export default function AtendimentosPage() {
               <button
                 type="button"
                 onClick={() => setModalDetalhes(false)}
-                className="flex h-9 w-9 items-center justify-center rounded-full text-2xl text-[#064F91] transition hover:bg-[#F0F4F8]"
+                className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-full text-2xl text-[#064F91] transition-all duration-200 hover:bg-[#F0F4F8] hover:shadow-sm"
               >
                 ×
               </button>
@@ -945,9 +1022,223 @@ export default function AtendimentosPage() {
               <button
                 type="button"
                 onClick={() => setModalDetalhes(false)}
-                className="h-[44px] rounded-lg border border-[#2E71B8] bg-white px-8 text-sm font-extrabold text-[#064F91] transition hover:bg-[#F3F8FD]"
+                className="h-[44px] cursor-pointer rounded-lg border border-[#2E71B8] bg-white px-8 text-sm font-extrabold text-[#064F91] transition-all duration-200 hover:-translate-y-[1px] hover:bg-[#F3F8FD] hover:shadow-md active:scale-[0.98]"
               >
                 Fechar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL ADICIONAR PENDÊNCIA */}
+
+      {modalPendencia && atendimentoModal && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/55 px-4"
+          onClick={() => {
+            setModalPendencia(false);
+            setDescricaoPendencia("");
+            setAtendimentoModal(null);
+          }}
+        >
+          <div
+            className="w-full max-w-[560px] rounded-2xl bg-white p-7 shadow-2xl"
+            onClick={(event) => event.stopPropagation()}
+          >
+            {/* CABEÇALHO */}
+
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <h3 className="text-2xl font-black text-[#064F91]">
+                  Adicionar pendência
+                </h3>
+
+                <p className="mt-1 text-sm text-[#064F91]">
+                  Registre uma pendência para este atendimento.
+                </p>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setModalPendencia(false);
+                  setDescricaoPendencia("");
+                  setAtendimentoModal(null);
+                }}
+                className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-full text-2xl text-[#064F91] transition-all duration-200 hover:bg-[#F0F4F8] hover:shadow-sm"
+              >
+                ×
+              </button>
+            </div>
+
+            <div className="my-5 border-t border-[#D6E2EE]" />
+
+            {/* IDENTIFICAÇÃO */}
+
+            {dadosAtendimentoModal && (
+              <div className="rounded-xl border border-[#D6E2EE] bg-[#F8FBFE] px-4 py-3">
+                <p className="text-xs text-[#064F91]">Atendimento de</p>
+
+                <p className="mt-1 text-base font-black text-[#064F91]">
+                  {dadosAtendimentoModal.aluno.nome}
+                </p>
+
+                <p className="mt-1 text-xs text-[#064F91]">
+                  {dadosAtendimentoModal.aluno.nomes_programas.join(", ")}
+                </p>
+              </div>
+            )}
+
+            {/* CAMPO */}
+
+            <div className="mt-5">
+              <label className="mb-2 block text-sm font-semibold text-[#064F91]">
+                Descrição da pendência
+              </label>
+
+              <textarea
+                value={descricaoPendencia}
+                onChange={(event) => setDescricaoPendencia(event.target.value)}
+                placeholder="Descreva a pendência do aluno..."
+                rows={5}
+                autoFocus
+                className="w-full resize-none rounded-xl border border-[#2E71B8] bg-white px-4 py-3 text-sm text-[#064F91] outline-none placeholder:text-[#8DAAC4] focus:ring-2 focus:ring-[#2E71B8]/20"
+              />
+            </div>
+
+            {/* BOTÕES */}
+
+            <div className="mt-6 flex justify-end gap-3">
+              <button
+                type="button"
+                onClick={() => {
+                  setModalPendencia(false);
+                  setDescricaoPendencia("");
+                  setAtendimentoModal(null);
+                }}
+                className="h-[44px] cursor-pointer rounded-lg border border-[#2E71B8] bg-white px-7 text-sm font-extrabold text-[#064F91] transition-all duration-200 hover:-translate-y-[1px] hover:bg-[#F3F8FD] hover:shadow-md active:scale-[0.98]"
+              >
+                Cancelar
+              </button>
+
+              <button
+                type="button"
+                onClick={salvarPendenciaModal}
+                disabled={salvando || !descricaoPendencia.trim()}
+                className="h-[44px] cursor-pointer rounded-lg bg-[#FF681D] px-7 text-sm font-extrabold text-white shadow-sm transition-all duration-200 hover:-translate-y-[1px] hover:bg-[#E95A0D] hover:shadow-md active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {salvando ? "Salvando..." : "Salvar pendência"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL ATUALIZAR STATUS */}
+
+      {modalStatus && atendimentoModal && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/55 px-4"
+          onClick={() => {
+            setModalStatus(false);
+            setAtendimentoModal(null);
+          }}
+        >
+          <div
+            className="w-full max-w-[520px] rounded-2xl bg-white p-7 shadow-2xl"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <h3 className="text-2xl font-black text-[#064F91]">
+                  Atualizar status
+                </h3>
+
+                <p className="mt-1 text-sm text-[#064F91]">
+                  Altere o status do atendimento selecionado.
+                </p>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setModalStatus(false);
+                  setAtendimentoModal(null);
+                }}
+                className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-full text-2xl text-[#064F91] transition-all duration-200 hover:bg-[#F0F4F8]"
+              >
+                ×
+              </button>
+            </div>
+
+            <div className="my-5 border-t border-[#D6E2EE]" />
+
+            {dadosAtendimentoModal && (
+              <div className="rounded-xl border border-[#D6E2EE] bg-[#F8FBFE] px-4 py-3">
+                <p className="text-xs text-[#064F91]">Atendimento de</p>
+
+                <p className="mt-1 text-base font-black text-[#064F91]">
+                  {dadosAtendimentoModal.aluno.nome}
+                </p>
+
+                <p className="mt-1 text-xs text-[#064F91]">
+                  Status atual: {dadosAtendimentoModal.atendimento.status}
+                </p>
+              </div>
+            )}
+
+            <div className="mt-5">
+              <label className="mb-2 block text-sm font-semibold text-[#064F91]">
+                Novo status
+              </label>
+
+              <select
+                value={status}
+                onChange={(event) => setStatus(event.target.value)}
+                className="h-[48px] w-full cursor-pointer rounded-lg border border-[#2E71B8] bg-white px-4 text-sm text-[#064F91] outline-none"
+              >
+                {atendimentoModal.status === "Em andamento" && (
+                  <>
+                    <option value="Em andamento" disabled>
+                      Em andamento
+                    </option>
+
+                    <option value="Concluído">Concluído</option>
+                  </>
+                )}
+
+                {atendimentoModal.status === "Com pendência" && (
+                  <>
+                    <option value="Com pendência" disabled>
+                      Com pendência
+                    </option>
+
+                    <option value="Concluído">Concluído</option>
+                  </>
+                )}
+              </select>
+            </div>
+
+            <div className="mt-6 flex justify-end gap-3">
+              <button
+                type="button"
+                onClick={() => {
+                  setModalStatus(false);
+                  setAtendimentoModal(null);
+                }}
+                className="h-[44px] cursor-pointer rounded-lg border border-[#2E71B8] bg-white px-7 text-sm font-extrabold text-[#064F91] transition-all duration-200 hover:-translate-y-[1px] hover:bg-[#F3F8FD] hover:shadow-md"
+              >
+                Cancelar
+              </button>
+
+              <button
+                type="button"
+                onClick={salvarStatusModal}
+                disabled={salvando}
+                className="h-[44px] cursor-pointer rounded-lg bg-[#FF681D] px-7 text-sm font-extrabold text-white transition-all duration-200 hover:-translate-y-[1px] hover:bg-[#E95A0D] hover:shadow-md disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {salvando ? "Salvando..." : "Atualizar status"}
               </button>
             </div>
           </div>
@@ -1016,7 +1307,19 @@ function AcaoCard({ texto, onClick }: { texto: string; onClick: () => void }) {
     <button
       type="button"
       onClick={onClick}
-      className="h-[36px] rounded-lg border border-[#2E71B8] bg-white px-5 text-xs font-extrabold text-[#064F91] transition-all duration-200 hover:bg-[#F3F8FD]"
+      className="
+        flex h-[38px] cursor-pointer items-center justify-center
+        rounded-lg border border-[#2E71B8]
+        bg-white px-5
+        text-xs font-bold text-[#064F91]
+        shadow-sm
+        transition-all duration-200
+        hover:-translate-y-[2px]
+        hover:bg-[#F1F7FC]
+        hover:shadow-md
+        active:translate-y-0
+        active:scale-[0.98]
+      "
     >
       {texto}
     </button>
