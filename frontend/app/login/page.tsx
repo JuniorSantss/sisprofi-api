@@ -235,15 +235,6 @@ export default function LoginPage() {
               >
                 {carregando ? "Entrando..." : "Entrar"}
               </button>
-
-              {/* VOLTAR */}
-              <button
-                type="button"
-                onClick={() => router.back()}
-                className="mt-3 h-[46px] w-full cursor-pointer rounded-lg border border-[#2E71B8] bg-white text-sm font-extrabold text-[#0B3E8E] shadow-sm transition-all duration-200 hover:-translate-y-[1px] hover:bg-[#F3F8FD] hover:shadow-md active:translate-y-0 active:scale-[0.99] sm:text-base"
-              >
-                Voltar
-              </button>
             </form>
           </div>
         </section>
