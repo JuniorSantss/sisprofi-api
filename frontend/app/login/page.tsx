@@ -35,8 +35,8 @@ export default function LoginPage() {
   }
 
   return (
-    <main className="min-h-screen bg-[#F8F9FF] px-4 py-6 sm:px-6 lg:flex lg:items-center lg:justify-center">
-      <div className="mx-auto flex min-h-[calc(100vh-48px)] w-full max-w-[1440px] overflow-hidden rounded-2xl border border-[#0B5598] bg-white">
+    <main className="h-screen w-screen overflow-hidden bg-white">
+      <div className="flex h-full w-full overflow-hidden bg-white">
         {/* PAINEL ESQUERDO */}
         <section className="relative hidden w-[42%] min-w-[360px] max-w-[560px] shrink-0 overflow-hidden bg-[#0B5598] lg:block">
           {/* FAIXA LARANJA */}
@@ -234,15 +234,6 @@ export default function LoginPage() {
                 className="mt-7 h-[48px] w-full cursor-pointer rounded-lg bg-[#FF681D] text-sm font-extrabold text-white shadow-sm transition-all duration-200 hover:-translate-y-[1px] hover:bg-[#E95A0D] hover:shadow-md active:translate-y-0 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0 disabled:hover:shadow-sm sm:mt-8 sm:text-base"
               >
                 {carregando ? "Entrando..." : "Entrar"}
-              </button>
-
-              {/* VOLTAR */}
-              <button
-                type="button"
-                onClick={() => router.back()}
-                className="mt-3 h-[46px] w-full cursor-pointer rounded-lg border border-[#2E71B8] bg-white text-sm font-extrabold text-[#0B3E8E] shadow-sm transition-all duration-200 hover:-translate-y-[1px] hover:bg-[#F3F8FD] hover:shadow-md active:translate-y-0 active:scale-[0.99] sm:text-base"
-              >
-                Voltar
               </button>
             </form>
           </div>

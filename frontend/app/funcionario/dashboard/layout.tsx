@@ -1,9 +1,11 @@
-import { ReactNode } from "react";
+export const metadata = {
+  title: "Dashboard",
+};
 
-export default function FuncionarioLayout({
+export default function AlunosLayout({
   children,
 }: {
-  children: ReactNode;
+  children: React.ReactNode;
 }) {
   return <>{children}</>;
 }

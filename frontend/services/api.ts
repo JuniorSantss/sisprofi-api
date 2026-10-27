@@ -112,7 +112,7 @@ export async function login(username: string, password: string) {
 }
 
 /* =========================
-   ALUNOS
+  ALUNOS
 ========================= */
 
 export async function buscarAlunos() {
@@ -120,7 +120,7 @@ export async function buscarAlunos() {
 }
 
 /* =========================
-   PROGRAMAS
+  PROGRAMAS
 ========================= */
 
 export async function buscarProgramas() {
@@ -128,7 +128,7 @@ export async function buscarProgramas() {
 }
 
 /* =========================
-   AGENDAMENTOS
+  AGENDAMENTOS
 ========================= */
 
 export async function buscarAgendamentos() {
@@ -136,15 +136,19 @@ export async function buscarAgendamentos() {
 }
 
 /* =========================
-   FUNCIONÁRIOS
+  FUNCIONÁRIOS
 ========================= */
 
 export async function buscarFuncionarios() {
   return apiRequest("/funcionarios/");
 }
 
+export async function buscarFuncionarioLogado() {
+  return apiRequest("/funcionarios/me/");
+}
+
 /* =========================
-   ATENDIMENTOS
+  ATENDIMENTOS
 ========================= */
 
 export async function buscarAtendimentos() {
@@ -180,7 +184,7 @@ export async function atualizarAtendimento(
 }
 
 /* =========================
-   PENDÊNCIAS
+  PENDÊNCIAS
 ========================= */
 
 export async function buscarPendencias() {
@@ -197,5 +201,55 @@ export async function criarPendencia(dados: {
     method: "POST",
 
     body: JSON.stringify(dados),
+  });
+}
+
+export async function atualizarPendencia(
+  id: number,
+  dados: {
+    status?: string;
+    descricao?: string;
+  },
+) {
+  return apiRequest(`/pendencias/${id}/`, {
+    method: "PATCH",
+    body: JSON.stringify(dados),
+  });
+}
+
+export async function atualizarFuncionario(
+  cpf: string,
+  dados: {
+    nome?: string;
+    email?: string;
+  },
+) {
+  return apiRequest(`/funcionarios/${cpf}/`, {
+    method: "PATCH",
+    body: JSON.stringify(dados),
+  });
+}
+
+export async function solicitarRecuperacaoSenha(email: string) {
+  return apiRequest("/recuperar-senha/solicitar/", {
+    method: "POST",
+    body: JSON.stringify({
+      email,
+    }),
+  });
+}
+
+export async function redefinirSenha(
+  email: string,
+  codigo: string,
+  novaSenha: string,
+) {
+  return apiRequest("/recuperar-senha/redefinir/", {
+    method: "POST",
+    body: JSON.stringify({
+      email,
+      codigo,
+      nova_senha: novaSenha,
+    }),
   });
 }

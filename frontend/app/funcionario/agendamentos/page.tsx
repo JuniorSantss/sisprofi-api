@@ -4,11 +4,14 @@ import Image from "next/image";
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { ReactNode } from "react";
+import FuncionarioPerfilButton from "@/components/FuncionarioPerfilButton";
 
 import {
   buscarAgendamentos,
   buscarAlunos,
   buscarAtendimentos,
+  buscarFuncionarioLogado,
+  criarAtendimento,
 } from "@/services/api";
 
 type AgendamentoAPI = {
@@ -51,6 +54,9 @@ export default function AgendamentosPage() {
 
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState("");
+
+  const [funcionarioLogado, setFuncionarioLogado] =
+    useState<Funcionario | null>(null);
 
   useEffect(() => {
     async function carregarDados() {
@@ -98,13 +104,60 @@ export default function AgendamentosPage() {
       .sort((a, b) => a.horario.localeCompare(b.horario));
   }, [agendamentos, hoje]);
 
-  function atenderAgendamento(id: number) {
-    router.push(`/funcionario/atendimentos?agendamento=${id}`);
+  async function atenderAgendamento(agendamento: Agendamento) {
+    try {
+      setErro("");
+
+      const funcionario = await buscarFuncionarioLogado();
+
+      if (!funcionario) {
+        setErro("Funcionário autenticado não encontrado.");
+        return;
+      }
+
+      const atendimentoExistente = atendimentos.find(
+        (item) => item.agendamento === agendamento.id,
+      );
+
+      if (atendimentoExistente) {
+        router.push("/funcionario/atendimentos");
+        return;
+      }
+
+      await criarAtendimento({
+        agendamento: agendamento.id,
+        funcionario: funcionario.cpf_func,
+        data_atendimento: obterDataHoje(),
+        descricao: "Atendimento iniciado.",
+        status: "Em andamento",
+      });
+
+      router.push("/funcionario/atendimentos");
+    } catch (error) {
+      setErro(
+        error instanceof Error
+          ? error.message
+          : "Não foi possível iniciar o atendimento.",
+      );
+    }
   }
 
+  useEffect(() => {
+    async function carregarFuncionarioLogado() {
+      try {
+        const funcionario = await buscarFuncionarioLogado();
+        setFuncionarioLogado(funcionario);
+      } catch (error) {
+        console.error("Erro ao carregar funcionário:", error);
+      }
+    }
+
+    carregarFuncionarioLogado();
+  }, []);
+
   return (
-    <main className="h-screen overflow-hidden bg-[#F8F9FF] px-4 py-6 sm:px-6">
-      <div className="mx-auto flex h-full w-full max-w-[1440px] overflow-hidden rounded-2xl border border-[#0B5598] bg-white">
+    <main className="h-screen w-screen overflow-hidden bg-white">
+      <div className="flex h-full w-full overflow-hidden bg-white">
         {/* SIDEBAR */}
         <aside className="relative hidden w-[22%] min-w-[230px] max-w-[290px] shrink-0 overflow-hidden bg-[#0B5598] text-white lg:flex lg:flex-col">
           <div className="absolute left-0 top-0 z-20 h-full w-[14px] bg-[#FF681D]" />
@@ -176,16 +229,7 @@ export default function AgendamentosPage() {
                 </p>
               </div>
 
-              <button
-                type="button"
-                className="flex h-[54px] w-full max-w-[240px] cursor-pointer items-center gap-3 rounded-xl border border-[#0B5598] bg-[#F4F8FC] px-4 text-[#064F91] transition-all duration-200 hover:-translate-y-[1px] hover:bg-[#EAF2F9] hover:shadow-sm"
-              >
-                <ProfileIcon />
-
-                <span className="flex-1 text-left text-base">Funcionário</span>
-
-                <span className="text-xs">▼</span>
-              </button>
+              <FuncionarioPerfilButton />
             </header>
 
             {/* CARD TOTAL */}
@@ -294,7 +338,7 @@ export default function AgendamentosPage() {
                                 <button
                                   type="button"
                                   onClick={() =>
-                                    atenderAgendamento(agendamento.id)
+                                    atenderAgendamento(agendamento)
                                   }
                                   className="cursor-pointer rounded-lg bg-[#FF681D] px-4 py-2 text-sm font-extrabold text-white shadow-sm transition-all duration-200 hover:-translate-y-[1px] hover:bg-[#E95A0D] hover:shadow-md active:translate-y-0 active:scale-[0.98]"
                                 >
