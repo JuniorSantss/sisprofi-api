@@ -4,6 +4,7 @@ import Image from "next/image";
 import { useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import type { ReactNode } from "react";
+import FuncionarioPerfilButton from "@/components/FuncionarioPerfilButton";
 
 import {
   atualizarAtendimento,
@@ -14,6 +15,7 @@ import {
   buscarPendencias,
   criarAtendimento,
   criarPendencia,
+  buscarFuncionarioLogado,
 } from "@/services/api";
 
 type Aluno = {
@@ -66,7 +68,8 @@ export default function AtendimentosPage() {
   const [alunos, setAlunos] = useState<Aluno[]>([]);
   const [agendamentos, setAgendamentos] = useState<Agendamento[]>([]);
   const [atendimentos, setAtendimentos] = useState<Atendimento[]>([]);
-  const [funcionarios, setFuncionarios] = useState<Funcionario[]>([]);
+  const [funcionarioLogado, setFuncionarioLogado] =
+    useState<Funcionario | null>(null);
   const [pendencias, setPendencias] = useState<Pendencia[]>([]);
 
   const [filtroStatus, setFiltroStatus] = useState("Todos");
@@ -111,14 +114,14 @@ export default function AtendimentosPage() {
         buscarAlunos(),
         buscarAgendamentos(),
         buscarAtendimentos(),
-        buscarFuncionarios(),
+        buscarFuncionarioLogado(),
         buscarPendencias(),
       ]);
 
       setAlunos(dadosAlunos);
       setAgendamentos(dadosAgendamentos);
       setAtendimentos(dadosAtendimentos);
-      setFuncionarios(dadosFuncionarios);
+      setFuncionarioLogado(dadosFuncionarios);
       setPendencias(dadosPendencias);
 
       if (idAgendamentoUrl) {
@@ -397,8 +400,8 @@ export default function AtendimentosPage() {
       return;
     }
 
-    if (funcionarios.length === 0) {
-      setErro("Nenhum funcionário cadastrado foi encontrado.");
+    if (!funcionarioLogado) {
+      setErro("Funcionário autenticado não encontrado.");
       return;
     }
 
@@ -407,7 +410,7 @@ export default function AtendimentosPage() {
 
       await criarAtendimento({
         agendamento: agendamento.id,
-        funcionario: funcionarios[0].cpf_func,
+        funcionario: funcionarioLogado.cpf_func,
         data_atendimento: dataAtendimento,
         descricao: descricao.trim(),
         status: "Em andamento",
@@ -566,6 +569,19 @@ export default function AtendimentosPage() {
     }
   }
 
+  useEffect(() => {
+    async function carregarFuncionarioLogado() {
+      try {
+        const funcionario = await buscarFuncionarioLogado();
+        setFuncionarioLogado(funcionario);
+      } catch (error) {
+        console.error("Erro ao carregar funcionário:", error);
+      }
+    }
+
+    carregarFuncionarioLogado();
+  }, []);
+
   return (
     <main className="h-screen w-screen overflow-hidden bg-white">
       <div className="flex h-full w-full overflow-hidden bg-white">
@@ -648,17 +664,8 @@ export default function AtendimentosPage() {
                 </p>
               </div>
 
-              <button
-                type="button"
-                onClick={() => router.push("/funcionario/perfil")}
-                className="flex h-[54px] w-full max-w-[240px] cursor-pointer items-center gap-3 rounded-xl border border-[#0B5598] bg-[#F4F8FC] px-4 text-[#064F91] transition-all duration-200 hover:-translate-y-[1px] hover:bg-[#EAF2F9] hover:shadow-sm"
-              >
-                <ProfileIcon />
-
-                <span className="flex-1 text-left text-base">Funcionário</span>
-
-                <span className="text-xs">▼</span>
-              </button>
+              <FuncionarioPerfilButton />
+              
             </header>
 
             {/* FORMULÁRIO */}
@@ -899,6 +906,7 @@ export default function AtendimentosPage() {
           </div>
         </section>
       </div>
+
       {/* MODAL DETALHES */}
 
       {modalDetalhes && dadosAtendimentoModal && (
@@ -940,6 +948,11 @@ export default function AtendimentosPage() {
               <DetalheModal
                 label="Aluno"
                 valor={dadosAtendimentoModal.aluno.nome}
+              />
+
+              <DetalheModal
+                label="Responsável"
+                valor={funcionarioLogado?.nome || "Não identificado"}
               />
 
               <DetalheModal

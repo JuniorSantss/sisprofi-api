@@ -4,6 +4,7 @@ import Image from "next/image";
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { ReactNode } from "react";
+import FuncionarioPerfilButton from "@/components/FuncionarioPerfilButton";
 
 import {
   buscarAgendamentos,
@@ -211,17 +212,7 @@ export default function DashboardPage() {
                 </p>
               </div>
 
-              <button
-                type="button"
-                onClick={() => router.push("/funcionario/perfil")}
-                className="flex h-[54px] w-full max-w-[240px] cursor-pointer items-center gap-3 rounded-xl border border-[#0B5598] bg-[#F4F8FC] px-4 text-[#064F91] transition-all duration-200 hover:-translate-y-[1px] hover:bg-[#EAF2F9] hover:shadow-sm"
-              >
-                <ProfileIcon />
-
-                <span className="flex-1 text-left text-base">Funcionário</span>
-
-                <span className="text-xs">▼</span>
-              </button>
+              <FuncionarioPerfilButton />
             </header>
 
             {/* CARDS */}

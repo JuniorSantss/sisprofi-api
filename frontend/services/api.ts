@@ -143,6 +143,10 @@ export async function buscarFuncionarios() {
   return apiRequest("/funcionarios/");
 }
 
+export async function buscarFuncionarioLogado() {
+  return apiRequest("/funcionarios/me/");
+}
+
 /* =========================
   ATENDIMENTOS
 ========================= */
@@ -223,5 +227,29 @@ export async function atualizarFuncionario(
   return apiRequest(`/funcionarios/${cpf}/`, {
     method: "PATCH",
     body: JSON.stringify(dados),
+  });
+}
+
+export async function solicitarRecuperacaoSenha(email: string) {
+  return apiRequest("/recuperar-senha/solicitar/", {
+    method: "POST",
+    body: JSON.stringify({
+      email,
+    }),
+  });
+}
+
+export async function redefinirSenha(
+  email: string,
+  codigo: string,
+  novaSenha: string,
+) {
+  return apiRequest("/recuperar-senha/redefinir/", {
+    method: "POST",
+    body: JSON.stringify({
+      email,
+      codigo,
+      nova_senha: novaSenha,
+    }),
   });
 }
