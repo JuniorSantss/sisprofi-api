@@ -60,8 +60,10 @@ type Pendencia = {
 };
 
 export default function AtendimentosPage() {
+  console.log("PÁGINA DE ATENDIMENTOS CARREGOU");
   const router = useRouter();
   const searchParams = useSearchParams();
+  const atendimentoIdUrl = searchParams.get("atendimento");
 
   const idAgendamentoUrl = searchParams.get("agendamento");
 
@@ -582,6 +584,43 @@ export default function AtendimentosPage() {
     carregarFuncionarioLogado();
   }, []);
 
+  useEffect(() => {
+    if (!atendimentoIdUrl) return;
+
+    const atendimentoEncontrado = atendimentos.find(
+      (item) => item.id === Number(atendimentoIdUrl),
+    );
+
+    if (!atendimentoEncontrado) return;
+
+    setAtendimentoModal(atendimentoEncontrado);
+    setModalDetalhes(true);
+  }, [atendimentoIdUrl, atendimentos]);
+
+  console.log(
+    "STATUS DOS ATENDIMENTOS:",
+    atendimentos.map((item) => ({
+      id: item.id,
+      status: item.status,
+      agendamento: item.agendamento,
+    })),
+  );
+
+  console.log(
+    "AGENDAMENTOS AINDA ABERTOS:",
+    agendamentos
+      .filter((item) => item.status === "Agendado")
+      .map((item) => ({
+        id: item.id,
+        aluno: item.aluno,
+        status: item.status,
+        data: item.data,
+        horario: item.horario,
+      })),
+  );
+  console.log("Atendimentos ativos:", atendimentosAtivos);
+  console.log("Cards montados:", cardsAtendimentos);
+
   return (
     <main className="h-screen w-screen overflow-hidden bg-white">
       <div className="flex h-full w-full overflow-hidden bg-white">
@@ -665,7 +704,6 @@ export default function AtendimentosPage() {
               </div>
 
               <FuncionarioPerfilButton />
-              
             </header>
 
             {/* FORMULÁRIO */}

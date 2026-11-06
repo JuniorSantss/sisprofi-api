@@ -85,7 +85,7 @@ async function apiRequest(endpoint: string, options: RequestInit = {}) {
 }
 
 /* =========================
-   LOGIN
+  LOGIN
 ========================= */
 
 export async function login(username: string, password: string) {

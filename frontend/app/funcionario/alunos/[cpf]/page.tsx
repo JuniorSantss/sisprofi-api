@@ -404,7 +404,7 @@ export default function DetalhesAlunoPage() {
 }
 
 /* =========================
-   COMPONENTES
+  COMPONENTES
 ========================= */
 
 function InfoBox({ titulo, valor }: { titulo: string; valor: string }) {
@@ -508,7 +508,7 @@ function MenuButton({
 }
 
 /* =========================
-   FUNÇÕES AUXILIARES
+  FUNÇÕES AUXILIARES
 ========================= */
 
 function formatarData(data: string) {

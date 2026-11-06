@@ -1,8 +1,10 @@
+export const instant = false;
+
 export const metadata = {
   title: "Atendimentos",
 };
 
-export default function AlunosLayout({
+export default function AtendimentosLayout({
   children,
 }: {
   children: React.ReactNode;
