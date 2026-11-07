@@ -79,6 +79,11 @@ export default function AtendimentosPage() {
   const [modalDetalhes, setModalDetalhes] = useState(false);
   const [modalPendencia, setModalPendencia] = useState(false);
   const [modalStatus, setModalStatus] = useState(false);
+  const [modalConfirmarConclusao, setModalConfirmarConclusao] = useState(false);
+  const [atendimentoParaConcluir, setAtendimentoParaConcluir] =
+    useState<Atendimento | null>(null);
+
+  const [nomeAlunoParaConcluir, setNomeAlunoParaConcluir] = useState("");
 
   const [atendimentoModal, setAtendimentoModal] = useState<Atendimento | null>(
     null,
@@ -100,6 +105,8 @@ export default function AtendimentosPage() {
 
   const [erro, setErro] = useState("");
   const [sucesso, setSucesso] = useState("");
+
+  const [salvandoConclusao, setSalvandoConclusao] = useState(false);
 
   async function carregarDados() {
     try {
@@ -408,7 +415,7 @@ export default function AtendimentosPage() {
     }
 
     try {
-      setSalvando(true);
+      setSalvandoConclusao(true);
 
       await criarAtendimento({
         agendamento: agendamento.id,
@@ -452,7 +459,7 @@ export default function AtendimentosPage() {
     }
 
     try {
-      setSalvando(true);
+      setSalvandoConclusao(true);
 
       if (status === "Com pendência") {
         await criarPendencia({
@@ -510,7 +517,7 @@ export default function AtendimentosPage() {
     }
 
     try {
-      setSalvando(true);
+      setSalvandoConclusao(true);
 
       await criarPendencia({
         atendimento: atendimentoModal.id,
@@ -547,7 +554,7 @@ export default function AtendimentosPage() {
     }
 
     try {
-      setSalvando(true);
+      setSalvandoConclusao(true);
 
       await atualizarAtendimento(atendimentoModal.id, {
         status,
@@ -620,6 +627,15 @@ export default function AtendimentosPage() {
   );
   console.log("Atendimentos ativos:", atendimentosAtivos);
   console.log("Cards montados:", cardsAtendimentos);
+
+  function abrirConfirmacaoConclusao(
+    atendimento: Atendimento,
+    nomeAluno: string,
+  ) {
+    setAtendimentoParaConcluir(atendimento);
+    setNomeAlunoParaConcluir(nomeAluno);
+    setModalConfirmarConclusao(true);
+  }
 
   return (
     <main className="h-screen w-screen overflow-hidden bg-white">
@@ -900,35 +916,13 @@ export default function AtendimentosPage() {
                             {atendimento.status !== "Concluído" && (
                               <button
                                 type="button"
-                                onClick={async () => {
-                                  setErro("");
-                                  setSucesso("");
-
-                                  try {
-                                    setSalvando(true);
-
-                                    await atualizarAtendimento(atendimento.id, {
-                                      status: "Concluído",
-                                      descricao: atendimento.descricao,
-                                    });
-
-                                    setSucesso(
-                                      `Atendimento de ${aluno.nome} concluído com sucesso.`,
-                                    );
-
-                                    await carregarDados();
-                                  } catch (error) {
-                                    setErro(
-                                      error instanceof Error
-                                        ? error.message
-                                        : "Não foi possível concluir o atendimento.",
-                                    );
-                                  } finally {
-                                    setSalvando(false);
-                                  }
-                                }}
-                                disabled={salvando}
-                                className="flex h-[38px] cursor-pointer items-center justify-center rounded-lg bg-[#FF681D] px-5 text-xs font-extrabold text-white shadow-sm transition-all duration-200 hover:-translate-y-[2px] hover:bg-[#E95A0D] hover:shadow-md active:translate-y-0 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
+                                onClick={() =>
+                                  abrirConfirmacaoConclusao(
+                                    atendimento,
+                                    aluno.nome,
+                                  )
+                                }
+                                className="flex h-[38px] cursor-pointer items-center justify-center rounded-lg bg-[#FF681D] px-5 text-xs font-extrabold text-white shadow-sm transition-all duration-200 hover:-translate-y-[2px] hover:bg-[#E95A0D] hover:shadow-md active:translate-y-0 active:scale-[0.98]"
                               >
                                 Concluir atendimento
                               </button>
@@ -1067,15 +1061,117 @@ export default function AtendimentosPage() {
               )}
             </div>
 
-            {/* BOTÃO */}
+            {/* AÇÕES */}
 
-            <div className="mt-6 flex justify-end">
+            <div className="mt-6 flex items-center justify-between gap-4">
               <button
                 type="button"
                 onClick={() => setModalDetalhes(false)}
-                className="h-[44px] cursor-pointer rounded-lg border border-[#2E71B8] bg-white px-8 text-sm font-extrabold text-[#064F91] transition-all duration-200 hover:-translate-y-[1px] hover:bg-[#F3F8FD] hover:shadow-md active:scale-[0.98]"
+                className="h-[44px] cursor-pointer rounded-lg border border-[#2E71B8] bg-white px-8 text-sm font-extrabold text-[#064F91] transition-all duration-200 hover:bg-[#F3F8FD]"
               >
                 Fechar
+              </button>
+
+              <div className="flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setModalDetalhes(false);
+                    setAtendimentoModal(dadosAtendimentoModal.atendimento);
+                    setModalStatus(true);
+                  }}
+                  className="h-[44px] cursor-pointer rounded-lg border border-[#2E71B8] bg-white px-6 text-sm font-extrabold text-[#064F91] transition-all duration-200 hover:bg-[#F3F8FD]"
+                >
+                  Alterar status
+                </button>
+
+                {dadosAtendimentoModal.atendimento.status !== "Concluído" && (
+                  <button
+                    type="button"
+                    onClick={() =>
+                      abrirConfirmacaoConclusao(
+                        dadosAtendimentoModal.atendimento,
+                        dadosAtendimentoModal.aluno.nome,
+                      )
+                    }
+                    className="h-[44px] cursor-pointer rounded-lg bg-[#FF681D] px-7 text-sm font-extrabold text-white transition-all duration-200 hover:bg-[#E95A0D]"
+                  >
+                    Concluir atendimento
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {modalConfirmarConclusao && atendimentoParaConcluir && (
+        <div
+          className="fixed inset-0 z-[60] flex items-center justify-center bg-black/55 px-4"
+          onClick={() => setModalConfirmarConclusao(false)}
+        >
+          <div
+            className="w-full max-w-[480px] rounded-2xl bg-white p-6 shadow-2xl"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <h3 className="text-xl font-black text-[#064F91]">
+              Concluir atendimento
+            </h3>
+
+            <p className="mt-3 text-sm leading-6 text-[#064F91]">
+              Tem certeza que deseja concluir o atendimento de{" "}
+              <span className="font-bold">{nomeAlunoParaConcluir}</span>?
+            </p>
+
+            <div className="mt-6 flex justify-end gap-3">
+              <button
+                type="button"
+                onClick={() => setModalConfirmarConclusao(false)}
+                className="h-[42px] cursor-pointer rounded-lg border border-[#2E71B8] bg-white px-6 text-sm font-extrabold text-[#064F91] hover:bg-[#F3F8FD]"
+              >
+                Cancelar
+              </button>
+
+              <button
+                type="button"
+                onClick={async () => {
+                  console.log("INICIANDO CONCLUSÃO");
+
+                  try {
+                    setErro("");
+                    setSucesso("");
+
+                    await atualizarAtendimento(atendimentoParaConcluir.id, {
+                      status: "Concluído",
+                      descricao: atendimentoParaConcluir.descricao,
+                    });
+
+                    console.log("ATENDIMENTO CONCLUÍDO");
+
+                    setModalConfirmarConclusao(false);
+                    setModalDetalhes(false);
+
+                    setSucesso(
+                      `Atendimento de ${nomeAlunoParaConcluir} concluído com sucesso.`,
+                    );
+
+                    await carregarDados();
+
+                    setAtendimentoParaConcluir(null);
+                    setNomeAlunoParaConcluir("");
+                  } catch (error) {
+                    console.error("ERRO AO CONCLUIR:", error);
+
+                    setErro(
+                      error instanceof Error
+                        ? error.message
+                        : "Não foi possível concluir o atendimento.",
+                    );
+                  }
+                }}
+                className="h-[42px] cursor-pointer rounded-lg bg-[#FF681D] px-6 text-sm font-extrabold text-white hover:bg-[#E95A0D]"
+              >
+                Confirmar conclusão
               </button>
             </div>
           </div>
@@ -1286,7 +1382,7 @@ export default function AtendimentosPage() {
               <button
                 type="button"
                 onClick={salvarStatusModal}
-                disabled={salvando}
+                disabled={salvandoConclusao}
                 className="h-[44px] cursor-pointer rounded-lg bg-[#FF681D] px-7 text-sm font-extrabold text-white transition-all duration-200 hover:-translate-y-[1px] hover:bg-[#E95A0D] hover:shadow-md disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {salvando ? "Salvando..." : "Atualizar status"}

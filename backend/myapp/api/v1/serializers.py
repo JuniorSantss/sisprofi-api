@@ -88,6 +88,24 @@ class AtendimentoSerializer(serializers.ModelSerializer):
             getattr(self.instance, 'status', None)
         )
 
+        if status in ['Em andamento', 'Com pendência']:
+            aluno = agendamento.aluno
+
+            atendimentos_ativos = Atendimento.objects.filter(
+                agendamento__aluno=aluno,
+                status__in=['Em andamento', 'Com pendência'],
+            )
+
+            if self.instance:
+                atendimentos_ativos = atendimentos_ativos.exclude(
+                    id=self.instance.id
+                )
+
+            if atendimentos_ativos.exists():
+                raise serializers.ValidationError(
+                    'Este aluno já possui outro atendimento ativo.'
+                )
+
         if self.instance is None:
             if agendamento.status != 'Agendado':
                 raise serializers.ValidationError(
