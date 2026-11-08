@@ -74,7 +74,7 @@ export default function AtendimentosPage() {
     useState<Funcionario | null>(null);
   const [pendencias, setPendencias] = useState<Pendencia[]>([]);
 
-  const [filtroStatus, setFiltroStatus] = useState("Todos");
+  const [filtroStatus, setFiltroStatus] = useState("Em andamento"git );
 
   const [modalDetalhes, setModalDetalhes] = useState(false);
   const [modalPendencia, setModalPendencia] = useState(false);
@@ -258,13 +258,23 @@ export default function AtendimentosPage() {
   }, [atendimentos]);
 
   const atendimentosFiltrados = useMemo(() => {
-    if (filtroStatus === "Todos") {
-      return cardsAtendimentos;
-    }
+    return cardsAtendimentos.filter((card) => {
+      if (!card) return false;
 
-    return cardsAtendimentos.filter(
-      (card) => card?.atendimento.status === filtroStatus,
-    );
+      if (filtroStatus === "Em andamento") {
+        return card.atendimento.status === "Em andamento";
+      }
+
+      if (filtroStatus === "Com pendência") {
+        return card.atendimento.status === "Com pendência";
+      }
+
+      if (filtroStatus === "Concluído") {
+        return card.atendimento.status === "Concluído";
+      }
+
+      return true;
+    });
   }, [cardsAtendimentos, filtroStatus]);
 
   const dadosAtendimentoModal = useMemo(() => {
@@ -799,7 +809,7 @@ export default function AtendimentosPage() {
                     Nenhum atendimento encontrado.
                   </div>
                 ) : (
-                  <div className="flex flex-col gap-3">
+                  <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
                     {atendimentosFiltrados.map((card) => {
                       if (!card) {
                         return null;
@@ -843,18 +853,11 @@ export default function AtendimentosPage() {
 
                           {/* DADOS */}
 
-                          <div className="mt-3 grid grid-cols-4 gap-x-8 gap-y-2 text-[#064F91]">
+                          <div className="mt-3 grid grid-cols-2 gap-x-6 gap-y-3 text-[#064F91]">
                             <InfoCard
                               label="CPF"
                               valor={mascararCpf(aluno.cpf_aluno)}
                             />
-
-                            <InfoCard
-                              label="Programa"
-                              valor={aluno.nomes_programas.join(", ")}
-                            />
-
-                            <InfoCard label="Curso" valor={aluno.curso} />
 
                             <InfoCard
                               label="Agendamento"
@@ -867,13 +870,6 @@ export default function AtendimentosPage() {
                               label="Motivo"
                               valor={agendamento.motivo}
                             />
-
-                            <div className="col-span-2">
-                              <InfoCard
-                                label="Descrição"
-                                valor={atendimento.descricao}
-                              />
-                            </div>
 
                             <InfoCard
                               label="Pendências"
