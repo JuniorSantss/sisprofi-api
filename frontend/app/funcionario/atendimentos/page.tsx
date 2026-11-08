@@ -74,7 +74,7 @@ export default function AtendimentosPage() {
     useState<Funcionario | null>(null);
   const [pendencias, setPendencias] = useState<Pendencia[]>([]);
 
-  const [filtroStatus, setFiltroStatus] = useState("Em andamento"git );
+  const [filtroStatus, setFiltroStatus] = useState("Em andamento");
 
   const [modalDetalhes, setModalDetalhes] = useState(false);
   const [modalPendencia, setModalPendencia] = useState(false);
@@ -647,6 +647,18 @@ export default function AtendimentosPage() {
     setModalConfirmarConclusao(true);
   }
 
+  const quantidadeEmAndamento = cardsAtendimentos.filter(
+    (card) => card?.atendimento.status === "Em andamento",
+  ).length;
+
+  const quantidadeComPendencia = cardsAtendimentos.filter(
+    (card) => card?.atendimento.status === "Com pendência",
+  ).length;
+
+  const quantidadeConcluidos = cardsAtendimentos.filter(
+    (card) => card?.atendimento.status === "Concluído",
+  ).length;
+
   return (
     <main className="h-screen w-screen overflow-hidden bg-white">
       <div className="flex h-full w-full overflow-hidden bg-white">
@@ -732,7 +744,6 @@ export default function AtendimentosPage() {
               <FuncionarioPerfilButton />
             </header>
 
-            {/* FORMULÁRIO */}
             {/* RESUMO */}
 
             <section className="mt-5 grid shrink-0 grid-cols-4 gap-3">
@@ -764,26 +775,47 @@ export default function AtendimentosPage() {
             {/* ATENDIMENTOS ATIVOS */}
 
             <section className="mt-5 flex min-h-0 flex-1 flex-col">
-              <div className="mb-3 flex shrink-0 items-center justify-between">
+              <div className="mb-4 shrink-0">
                 <h3 className="text-2xl font-black text-[#064F91]">
-                  Atendimentos ativos
+                  Atendimentos
                 </h3>
 
-                <div className="flex gap-2">
-                  <select className="h-[38px] rounded-lg border border-[#2E71B8] bg-white px-3 text-xs text-[#064F91] outline-none">
-                    <option>Todos</option>
-                  </select>
-
-                  <select
-                    value={filtroStatus}
-                    onChange={(event) => setFiltroStatus(event.target.value)}
-                    className="h-[38px] rounded-lg border border-[#2E71B8] bg-white px-3 text-xs text-[#064F91] outline-none"
+                <div className="mt-4 flex gap-2 border-b border-[#D6E2EE]">
+                  <button
+                    type="button"
+                    onClick={() => setFiltroStatus("Em andamento")}
+                    className={`border-b-2 px-4 py-3 text-sm font-extrabold transition ${
+                      filtroStatus === "Em andamento"
+                        ? "border-[#FF681D] text-[#064F91]"
+                        : "border-transparent text-[#6A8198] hover:text-[#064F91]"
+                    }`}
                   >
-                    <option value="Todos">Status</option>
-                    <option value="Em andamento">Em andamento</option>
-                    <option value="Com pendência">Com pendência</option>
-                    <option value="Concluído">Concluído</option>
-                  </select>
+                    Em andamento ({quantidadeEmAndamento})
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setFiltroStatus("Com pendência")}
+                    className={`border-b-2 px-4 py-3 text-sm font-extrabold transition ${
+                      filtroStatus === "Com pendência"
+                        ? "border-[#FF681D] text-[#064F91]"
+                        : "border-transparent text-[#6A8198] hover:text-[#064F91]"
+                    }`}
+                  >
+                    Com pendência ({quantidadeComPendencia})
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setFiltroStatus("Concluído")}
+                    className={`border-b-2 px-4 py-3 text-sm font-extrabold transition ${
+                      filtroStatus === "Concluído"
+                        ? "border-[#FF681D] text-[#064F91]"
+                        : "border-transparent text-[#6A8198] hover:text-[#064F91]"
+                    }`}
+                  >
+                    Concluídos ({quantidadeConcluidos})
+                  </button>
                 </div>
               </div>
 
@@ -892,6 +924,17 @@ export default function AtendimentosPage() {
 
                                 setAtendimentoModal(atendimento);
                                 setModalDetalhes(true);
+                              }}
+                            />
+
+                            <AcaoCard
+                              texto="Alterar status"
+                              onClick={() => {
+                                setModalDetalhes(false);
+                                setModalPendencia(false);
+
+                                setAtendimentoModal(atendimento);
+                                setModalStatus(true);
                               }}
                             />
 
@@ -1341,25 +1384,11 @@ export default function AtendimentosPage() {
                 onChange={(event) => setStatus(event.target.value)}
                 className="h-[48px] w-full cursor-pointer rounded-lg border border-[#2E71B8] bg-white px-4 text-sm text-[#064F91] outline-none"
               >
-                {atendimentoModal.status === "Em andamento" && (
-                  <>
-                    <option value="Em andamento" disabled>
-                      Em andamento
-                    </option>
+                <option value="Em andamento">Em andamento</option>
 
-                    <option value="Concluído">Concluído</option>
-                  </>
-                )}
+                <option value="Com pendência">Com pendência</option>
 
-                {atendimentoModal.status === "Com pendência" && (
-                  <>
-                    <option value="Com pendência" disabled>
-                      Com pendência
-                    </option>
-
-                    <option value="Concluído">Concluído</option>
-                  </>
-                )}
+                <option value="Concluído">Concluído</option>
               </select>
             </div>
 
@@ -1378,7 +1407,7 @@ export default function AtendimentosPage() {
               <button
                 type="button"
                 onClick={salvarStatusModal}
-                disabled={salvandoConclusao}
+                disabled={salvando}
                 className="h-[44px] cursor-pointer rounded-lg bg-[#FF681D] px-7 text-sm font-extrabold text-white transition-all duration-200 hover:-translate-y-[1px] hover:bg-[#E95A0D] hover:shadow-md disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {salvando ? "Salvando..." : "Atualizar status"}
