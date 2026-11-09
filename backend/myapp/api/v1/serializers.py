@@ -147,29 +147,39 @@ class PendenciaSerializer(serializers.ModelSerializer):
             getattr(self.instance, 'atendimento', None)
         )
 
-        if atendimento is None:
+        if atendimento.status not in ['Em andamento', 'Com pendência']:
             raise serializers.ValidationError(
-                'Atendimento não encontrado.'
-            )
-
-        if atendimento.status not in [
-            'Em andamento',
-            'Com pendência'
-        ]:
-            raise serializers.ValidationError(
-                'Só é possível registrar ou atualizar pendência '
-                'em um atendimento ativo.'
+                'Só é possível registrar ou alterar pendências em um '
+                'atendimento ativo.'
             )
 
         return data
 
     def create(self, validated_data):
-        pendencia = Pendencia.objects.create(
-            **validated_data
-        )
+        pendencia = Pendencia.objects.create(**validated_data)
 
         atendimento = pendencia.atendimento
         atendimento.status = 'Com pendência'
         atendimento.save()
+
+        return pendencia
+
+    def update(self, instance, validated_data):
+        pendencia = super().update(instance, validated_data)
+
+        atendimento = pendencia.atendimento
+
+        possui_pendencia_aberta = Pendencia.objects.filter(
+            atendimento=atendimento
+        ).exclude(
+            status='Concluída'
+        ).exists()
+
+        if possui_pendencia_aberta:
+            atendimento.status = 'Com pendência'
+        else:
+            atendimento.status = 'Em andamento'
+
+        atendimento.save(update_fields=['status'])
 
         return pendencia

@@ -7,7 +7,6 @@ import type { ReactNode } from "react";
 import FuncionarioPerfilButton from "@/components/FuncionarioPerfilButton";
 
 import {
-  atualizarPendencia,
   buscarAgendamentos,
   buscarAlunos,
   buscarAtendimentos,
@@ -51,16 +50,16 @@ type PendenciaAPI = {
 
 type PendenciaTela = PendenciaAPI & {
   nomeAluno: string;
+  cpfAluno: string;
 };
 
 export default function PendenciasPage() {
   const router = useRouter();
 
   const [pendencias, setPendencias] = useState<PendenciaTela[]>([]);
-  const [filtroStatus, setFiltroStatus] = useState("Todas");
+  const [filtroStatus, setFiltroStatus] = useState("Aberta");
 
   const [carregando, setCarregando] = useState(true);
-  const [atualizandoId, setAtualizandoId] = useState<number | null>(null);
 
   const [erro, setErro] = useState("");
   const [sucesso, setSucesso] = useState("");
@@ -99,11 +98,12 @@ export default function PendenciasPage() {
           return {
             ...pendencia,
             nomeAluno: aluno?.nome || "Aluno não encontrado",
+            cpfAluno: aluno?.cpf_aluno || "Não informado",
           };
         },
       );
 
-      setPendencias(lista);
+      setPendencias([...lista].sort((a, b) => b.id - a.id));
     } catch (error) {
       setErro(
         error instanceof Error
@@ -127,43 +127,26 @@ export default function PendenciasPage() {
     return pendencias.filter((pendencia) => pendencia.status === filtroStatus);
   }, [pendencias, filtroStatus]);
 
-  const statusDisponiveis = useMemo(() => {
-    const status = pendencias
-      .map((pendencia) => pendencia.status)
-      .filter(Boolean);
-
-    return Array.from(new Set(status));
-  }, [pendencias]);
-
-  async function concluirPendencia(pendenciaId: number) {
-    setErro("");
-    setSucesso("");
-
-    try {
-      setAtualizandoId(pendenciaId);
-
-      await atualizarPendencia(pendenciaId, {
-        status: "Concluída",
-      });
-
-      setSucesso("Pendência concluída com sucesso.");
-
-      await carregarDados();
-    } catch (error) {
-      setErro(
-        error instanceof Error
-          ? error.message
-          : "Não foi possível concluir a pendência.",
-      );
-    } finally {
-      setAtualizandoId(null);
-    }
-  }
-
   function pendenciaEstaConcluida(status: string) {
     const normalizado = status.trim().toLowerCase();
 
     return normalizado === "concluída" || normalizado === "concluida";
+  }
+
+  const quantidadeAbertas = pendencias.filter(
+    (pendencia) => !pendenciaEstaConcluida(pendencia.status),
+  ).length;
+
+  const quantidadeConcluidas = pendencias.filter((pendencia) =>
+    pendenciaEstaConcluida(pendencia.status),
+  ).length;
+
+  function formatarData(data: string) {
+    if (!data) return "Não informada";
+
+    const [ano, mes, dia] = data.split("-");
+
+    return `${dia}/${mes}/${ano}`;
   }
 
   return (
@@ -250,26 +233,34 @@ export default function PendenciasPage() {
             {/* QUADRO PRINCIPAL */}
 
             <section className="mt-7 flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl border border-[#0B5598] bg-white p-4 sm:p-5">
-              {/* FILTRO */}
+              {/* ABAS */}
 
-              <div className="shrink-0">
-                <label className="mb-2 block text-sm text-[#064F91]">
-                  Status
-                </label>
+              <div className="shrink-0 border-b border-[#D6E2EE]">
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setFiltroStatus("Aberta")}
+                    className={`border-b-2 px-4 py-3 text-sm font-extrabold transition ${
+                      filtroStatus === "Aberta"
+                        ? "border-[#FF681D] text-[#064F91]"
+                        : "border-transparent text-[#6A8198] hover:text-[#064F91]"
+                    }`}
+                  >
+                    Abertas ({quantidadeAbertas})
+                  </button>
 
-                <select
-                  value={filtroStatus}
-                  onChange={(event) => setFiltroStatus(event.target.value)}
-                  className="h-[48px] w-full max-w-[265px] cursor-pointer rounded-lg border border-[#2E71B8] bg-white px-4 text-sm text-[#064F91] outline-none transition focus:ring-2 focus:ring-[#0B5598]/10"
-                >
-                  <option value="Todas">Todas</option>
-
-                  {statusDisponiveis.map((status) => (
-                    <option key={status} value={status}>
-                      {status}
-                    </option>
-                  ))}
-                </select>
+                  <button
+                    type="button"
+                    onClick={() => setFiltroStatus("Concluída")}
+                    className={`border-b-2 px-4 py-3 text-sm font-extrabold transition ${
+                      filtroStatus === "Concluída"
+                        ? "border-[#FF681D] text-[#064F91]"
+                        : "border-transparent text-[#6A8198] hover:text-[#064F91]"
+                    }`}
+                  >
+                    Concluídas ({quantidadeConcluidas})
+                  </button>
+                </div>
               </div>
 
               {/* MENSAGENS */}
@@ -288,96 +279,86 @@ export default function PendenciasPage() {
 
               {/* TABELA */}
 
+              {/* CARDS */}
+
               <div className="mt-6 min-h-0 flex-1 overflow-auto">
-                <table className="w-full min-w-[780px] border-collapse text-left text-[#064F91]">
-                  <thead className="sticky top-0 z-10">
-                    <tr className="border border-[#B9CEE2] bg-[#F0F4F8]">
-                      <th className="px-4 py-3 text-[13px] font-medium">
-                        Aluno
-                      </th>
+                {carregando ? (
+                  <div className="py-12 text-center text-sm text-[#064F91]">
+                    Carregando pendências...
+                  </div>
+                ) : pendenciasFiltradas.length > 0 ? (
+                  <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
+                    {pendenciasFiltradas.map((pendencia) => {
+                      const concluida = pendenciaEstaConcluida(
+                        pendencia.status,
+                      );
 
-                      <th className="px-4 py-3 text-[13px] font-medium">
-                        Pendência
-                      </th>
-
-                      <th className="px-4 py-3 text-[13px] font-medium">
-                        Status
-                      </th>
-
-                      <th className="px-4 py-3 text-center text-[13px] font-medium">
-                        Ação
-                      </th>
-                    </tr>
-                  </thead>
-
-                  <tbody>
-                    {carregando ? (
-                      <tr>
-                        <td
-                          colSpan={4}
-                          className="px-5 py-12 text-center text-sm text-[#064F91]"
+                      return (
+                        <article
+                          key={pendencia.id}
+                          className={`rounded-xl border px-4 py-4 ${
+                            concluida
+                              ? "border-[#B8C6D3] bg-[#F8FAFC]"
+                              : "border-[#2E71B8] bg-white"
+                          }`}
                         >
-                          Carregando pendências...
-                        </td>
-                      </tr>
-                    ) : pendenciasFiltradas.length > 0 ? (
-                      pendenciasFiltradas.map((pendencia) => {
-                        const concluida = pendenciaEstaConcluida(
-                          pendencia.status,
-                        );
+                          <div className="flex items-start justify-between gap-4">
+                            <div>
+                              <h3 className="text-base font-black text-[#064F91]">
+                                {pendencia.nomeAluno}
+                              </h3>
 
-                        const atualizando = atualizandoId === pendencia.id;
+                              <p className="mt-1 text-sm text-[#6A8198]">
+                                CPF: {pendencia.cpfAluno}
+                              </p>
+                            </div>
 
-                        return (
-                          <tr
-                            key={pendencia.id}
-                            className="border-b border-[#C8D9E8] transition-colors duration-200 hover:bg-[#F8FBFE]"
-                          >
-                            <td className="px-4 py-3 text-[13px]">
-                              {pendencia.nomeAluno}
-                            </td>
+                            <StatusBadge status={pendencia.status} />
+                          </div>
 
-                            <td className="px-4 py-3 text-[13px]">
+                          <div className="mt-4">
+                            <p className="text-xs font-bold uppercase tracking-wide text-[#6A8198]">
+                              Descrição
+                            </p>
+
+                            <p className="mt-1 text-sm font-semibold text-[#064F91]">
                               {pendencia.descricao}
-                            </td>
+                            </p>
+                          </div>
 
-                            <td className="px-4 py-3">
-                              <StatusBadge status={pendencia.status} />
-                            </td>
+                          <div className="mt-3">
+                            <p className="text-xs font-bold uppercase tracking-wide text-[#6A8198]">
+                              Data
+                            </p>
 
-                            <td className="px-4 py-2 text-center">
-                              {concluida ? (
-                                <span className="inline-flex rounded-lg bg-[#E9F5ED] px-4 py-2 text-xs font-semibold text-[#26804A]">
-                                  Concluída
-                                </span>
-                              ) : (
-                                <button
-                                  type="button"
-                                  onClick={() =>
-                                    concluirPendencia(pendencia.id)
-                                  }
-                                  disabled={atualizando}
-                                  className="cursor-pointer rounded-lg bg-[#FF681D] px-4 py-2 text-sm font-extrabold text-white shadow-sm transition-all duration-200 hover:-translate-y-[1px] hover:bg-[#E95A0D] hover:shadow-md active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
-                                >
-                                  {atualizando ? "Concluindo..." : "Concluir"}
-                                </button>
-                              )}
-                            </td>
-                          </tr>
-                        );
-                      })
-                    ) : (
-                      <tr>
-                        <td
-                          colSpan={4}
-                          className="px-5 py-12 text-center text-sm text-gray-400"
-                        >
-                          Nenhuma pendência encontrada.
-                        </td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
+                            <p className="mt-1 text-sm font-semibold text-[#064F91]">
+                              {formatarData(pendencia.data_criacao)}
+                            </p>
+                          </div>
+                          <div className="mt-4 flex justify-end">
+                            <button
+                              type="button"
+                              onClick={() =>
+                                router.push(
+                                  `/funcionario/atendimentos?atendimento=${pendencia.atendimento}`,
+                                )
+                              }
+                              className="h-[38px] cursor-pointer rounded-lg border border-[#2E71B8] bg-white px-4 text-sm font-extrabold text-[#064F91] transition-all duration-200 hover:bg-[#F3F8FD]"
+                            >
+                              Ver atendimento
+                            </button>
+                          </div>
+                        </article>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <div className="py-12 text-center text-sm text-gray-400">
+                    {filtroStatus === "Aberta"
+                      ? "Nenhuma pendência aberta."
+                      : "Nenhuma pendência concluída."}
+                  </div>
+                )}
               </div>
             </section>
 
@@ -400,7 +381,7 @@ export default function PendenciasPage() {
 }
 
 /* =========================
-   COMPONENTES
+  COMPONENTES
 ========================= */
 
 function MenuButton({
