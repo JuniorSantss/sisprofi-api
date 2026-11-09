@@ -120,7 +120,7 @@ class AtendimentoSerializer(serializers.ModelSerializer):
 
             if possui_pendencia_aberta:
                 raise serializers.ValidationError(
-                    'Não é possível concluir o atendimento enquanto houver'
+                    'Não é possível concluir o atendimento enquanto houver '
                     'pendências abertas.'
                 )
                 
