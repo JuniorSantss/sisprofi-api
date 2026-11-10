@@ -118,7 +118,7 @@ export default function PerfilFuncionarioPage() {
           <div className="absolute left-0 top-0 z-20 h-full w-[14px] bg-[#FF681D]" />
 
           <div className="relative z-10 flex h-full flex-col px-7 pt-12 xl:px-9">
-            <h1 className="ml-2 text-xl font-extrabold text-[#FF681D] xl:text-2xl">
+            <h1 className="ml-2 text-xl font-extrabold text-white xl:text-2xl">
               PROUNI E FIES
             </h1>
 
@@ -296,7 +296,7 @@ export default function PerfilFuncionarioPage() {
 }
 
 /* =========================
-   COMPONENTES
+  COMPONENTES
 ========================= */
 
 function MenuButton({
@@ -332,7 +332,7 @@ function formatarCpf(cpf: string) {
 }
 
 /* =========================
-   ÍCONES
+  ÍCONES
 ========================= */
 
 function HomeIcon() {

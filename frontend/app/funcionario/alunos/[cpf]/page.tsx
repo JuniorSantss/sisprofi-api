@@ -157,7 +157,7 @@ export default function DetalhesAlunoPage() {
           <div className="absolute left-0 top-0 z-20 h-full w-[14px] bg-[#FF681D]" />
 
           <div className="relative z-10 flex h-full flex-col px-6 pt-10 xl:px-8 xl:pt-12">
-            <h1 className="ml-2 text-xl font-extrabold text-[#FF681D] xl:text-2xl">
+            <h1 className="ml-2 text-xl font-extrabold text-white xl:text-2xl">
               PROUNI E FIES
             </h1>
 
@@ -434,7 +434,7 @@ function StatusBadge({ status }: { status: string }) {
 
   if (normalizado === "concluído" || normalizado === "concluido") {
     return (
-      <span className="inline-flex w-fit rounded-full bg-[#D9F0E1] px-4 py-1.5 text-xs font-semibold text-[#26804A]">
+      <span className="inline-flex w-fit rounded-full bg-[#16A34A] px-4 py-1.5 text-xs font-bold text-white">
         {status}
       </span>
     );
@@ -442,7 +442,7 @@ function StatusBadge({ status }: { status: string }) {
 
   if (normalizado === "em andamento") {
     return (
-      <span className="inline-flex w-fit rounded-full bg-[#FFE5D4] px-4 py-1.5 text-xs font-semibold text-[#FF681D]">
+      <span className="inline-flex w-fit rounded-full bg-[#2563EB] px-4 py-1.5 text-xs font-bold text-white">
         {status}
       </span>
     );
@@ -450,14 +450,14 @@ function StatusBadge({ status }: { status: string }) {
 
   if (normalizado === "com pendência" || normalizado === "com pendencia") {
     return (
-      <span className="inline-flex w-fit rounded-full bg-[#FFD8DB] px-4 py-1.5 text-xs font-semibold text-[#E32E3D]">
+      <span className="inline-flex w-fit rounded-full bg-[#D97706] px-4 py-1.5 text-xs font-bold text-white">
         {status}
       </span>
     );
   }
 
   return (
-    <span className="inline-flex w-fit rounded-full bg-[#DCEBFA] px-4 py-1.5 text-xs font-semibold text-[#064F91]">
+    <span className="inline-flex w-fit rounded-full bg-[#64748B] px-4 py-1.5 text-xs font-bold text-white">
       {status}
     </span>
   );

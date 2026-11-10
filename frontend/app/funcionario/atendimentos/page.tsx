@@ -548,7 +548,7 @@ export default function AtendimentosPage() {
     }
 
     try {
-      setSalvandoConclusao(true);
+      setSalvando(true);
 
       await criarPendencia({
         atendimento: atendimentoModal.id,
@@ -557,10 +557,36 @@ export default function AtendimentosPage() {
         data_criacao: obterDataHoje(),
       });
 
-      setSucesso("Pendência registrada com sucesso.");
-
       setDescricaoPendencia("");
       setModalPendencia(false);
+
+      // Atualiza o atendimento dentro do modal
+      setAtendimentoModal((atual) =>
+        atual
+          ? {
+              ...atual,
+              status: "Com pendência",
+            }
+          : atual,
+      );
+
+      // Atualiza também o card da lista
+      setAtendimentos((atuais) =>
+        atuais.map((atendimento) =>
+          atendimento.id === atendimentoModal.id
+            ? {
+                ...atendimento,
+                status: "Com pendência",
+              }
+            : atendimento,
+        ),
+      );
+
+      setFiltroStatus("Com pendência");
+
+      setModalDetalhes(true);
+
+      setSucesso("Pendência registrada com sucesso.");
 
       await carregarDados();
     } catch (error) {
@@ -724,7 +750,7 @@ export default function AtendimentosPage() {
           <div className="absolute left-0 top-0 z-20 h-full w-[14px] bg-[#FF681D]" />
 
           <div className="relative z-10 flex h-full flex-col px-6 pt-10 xl:px-8 xl:pt-12">
-            <h1 className="ml-2 text-xl font-extrabold text-[#FF681D] xl:text-2xl">
+            <h1 className="ml-2 text-xl font-extrabold text-white xl:text-2xl">
               PROUNI E FIES
             </h1>
 
@@ -984,7 +1010,6 @@ export default function AtendimentosPage() {
                               texto="Ver detalhes"
                               onClick={() => {
                                 setModalPendencia(false);
-                                setModalStatus(false);
 
                                 setAtendimentoModal(atendimento);
                                 setModalDetalhes(true);
@@ -994,10 +1019,14 @@ export default function AtendimentosPage() {
                             <AcaoCard
                               texto="Alterar status"
                               onClick={() => {
-                                setModalDetalhes(false);
-                                setModalPendencia(false);
-
                                 setAtendimentoModal(atendimento);
+
+                                setStatus(
+                                  atendimento.status === "Concluído"
+                                    ? "Em andamento"
+                                    : atendimento.status,
+                                );
+
                                 setModalStatus(true);
                               }}
                             />
@@ -1006,7 +1035,6 @@ export default function AtendimentosPage() {
                               <AcaoCard
                                 texto="Adicionar pendência"
                                 onClick={() => {
-                                  setModalDetalhes(false);
                                   setModalStatus(false);
 
                                   setAtendimentoModal(atendimento);
@@ -1209,6 +1237,13 @@ export default function AtendimentosPage() {
                   type="button"
                   onClick={() => {
                     setAtendimentoModal(dadosAtendimentoModal.atendimento);
+
+                    setStatus(
+                      dadosAtendimentoModal.atendimento.status === "Concluído"
+                        ? "Em andamento"
+                        : dadosAtendimentoModal.atendimento.status,
+                    );
+
                     setModalStatus(true);
                   }}
                   className="h-[44px] cursor-pointer rounded-lg border border-[#2E71B8] bg-white px-6 text-sm font-extrabold text-[#064F91] transition-all duration-200 hover:bg-[#F3F8FD]"
@@ -1478,9 +1513,9 @@ export default function AtendimentosPage() {
               >
                 <option value="Em andamento">Em andamento</option>
 
-                <option value="Com pendência">Com pendência</option>
-
-                <option value="Concluído">Concluído</option>
+                {atendimentoModal.status !== "Concluído" && (
+                  <option value="Concluído">Concluído</option>
+                )}
               </select>
             </div>
 
@@ -1590,9 +1625,17 @@ function AcaoCard({ texto, onClick }: { texto: string; onClick: () => void }) {
 }
 
 function StatusBadge({ status }: { status: string }) {
+  if (status === "Em andamento") {
+    return (
+      <span className="inline-flex rounded-full bg-[#2563EB] px-3 py-1 text-[11px] font-bold text-white">
+        Em andamento
+      </span>
+    );
+  }
+
   if (status === "Com pendência") {
     return (
-      <span className="rounded-full border border-[#E3A94C] bg-[#FFF8EC] px-3 py-1 text-[10px] font-medium text-[#A76500]">
+      <span className="inline-flex rounded-full bg-[#D97706] px-3 py-1 text-[11px] font-bold text-white">
         Com pendência
       </span>
     );
@@ -1600,7 +1643,7 @@ function StatusBadge({ status }: { status: string }) {
 
   if (status === "Concluído") {
     return (
-      <span className="rounded-full border border-green-500 bg-green-50 px-3 py-1 text-[10px] font-medium text-green-700">
+      <span className="inline-flex rounded-full bg-[#16A34A] px-3 py-1 text-[11px] font-bold text-white">
         Concluído
       </span>
     );
@@ -1608,7 +1651,7 @@ function StatusBadge({ status }: { status: string }) {
 
   if (status === "Concluída") {
     return (
-      <span className="rounded-full border border-green-500 bg-green-50 px-3 py-1 text-[10px] font-medium text-green-700">
+      <span className="inline-flex rounded-full bg-[#16A34A] px-3 py-1 text-[11px] font-bold text-white">
         Concluída
       </span>
     );
@@ -1616,15 +1659,15 @@ function StatusBadge({ status }: { status: string }) {
 
   if (status === "Aberta") {
     return (
-      <span className="rounded-full border border-[#FF8A4D] bg-[#FFF3EC] px-3 py-1 text-[10px] font-medium text-[#FF681D]">
+      <span className="inline-flex rounded-full bg-[#DC2626] px-3 py-1 text-[11px] font-bold text-white">
         Aberta
       </span>
     );
   }
 
   return (
-    <span className="rounded-full border border-[#FF8A4D] bg-[#FFF3EC] px-3 py-1 text-[10px] font-medium text-[#FF681D]">
-      Em andamento
+    <span className="inline-flex rounded-full bg-[#64748B] px-3 py-1 text-[11px] font-bold text-white">
+      {status}
     </span>
   );
 }

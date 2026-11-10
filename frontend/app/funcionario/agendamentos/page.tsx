@@ -167,7 +167,7 @@ export default function AgendamentosPage() {
           <div className="absolute left-0 top-0 z-20 h-full w-[14px] bg-[#FF681D]" />
 
           <div className="relative z-10 flex h-full flex-col px-6 pt-10 xl:px-8 xl:pt-12">
-            <h1 className="ml-2 text-xl font-extrabold text-[#FF681D] xl:text-2xl">
+            <h1 className="ml-2 text-xl font-extrabold text-white xl:text-2xl">
               PROUNI E FIES
             </h1>
 
@@ -304,65 +304,65 @@ export default function AgendamentosPage() {
                       </tr>
                     ) : agendamentosHoje.length > 0 ? (
                       agendamentosHoje.map((agendamento) => {
-                          const atendimentoRelacionado = atendimentos.find(
-                            (atendimento) =>
-                              atendimento.agendamento === agendamento.id,
-                          );
+                        const atendimentoRelacionado = atendimentos.find(
+                          (atendimento) =>
+                            atendimento.agendamento === agendamento.id,
+                        );
 
-                          const jaPossuiAtendimento = Boolean(
-                            atendimentoRelacionado,
-                          );
+                        const jaPossuiAtendimento = Boolean(
+                          atendimentoRelacionado,
+                        );
 
-                          const statusExibido =
-                            atendimentoRelacionado?.status || agendamento.status;
+                        const statusExibido =
+                          atendimentoRelacionado?.status || agendamento.status;
 
-                          return (
-                            <tr
-                              key={agendamento.id}
-                              className="border-b border-[#C8D9E8] transition-colors duration-200 hover:bg-[#F8FBFE]"
-                            >
-                              <td className="px-5 py-3 text-[13px]">
-                                {agendamento.horario.slice(0, 5)}
-                              </td>
-
-                              <td className="px-5 py-3 text-[13px]">
-                                {agendamento.nomeAluno}
-                              </td>
-
-                              <td className="px-5 py-3">
-                                <StatusBadge status={statusExibido} />
-                              </td>
-
-                              <td className="px-5 py-2 text-center">
-                                {jaPossuiAtendimento ? (
-                                  <span className="inline-flex rounded-lg bg-gray-100 px-4 py-2 text-xs font-semibold text-gray-500">
-                                    Atendido
-                                  </span>
-                                ) : (
-                                  <button
-                                    type="button"
-                                    onClick={() =>
-                                      atenderAgendamento(agendamento)
-                                    }
-                                    className="cursor-pointer rounded-lg bg-[#FF681D] px-4 py-2 text-sm font-extrabold text-white shadow-sm transition-all duration-200 hover:-translate-y-[1px] hover:bg-[#E95A0D] hover:shadow-md active:translate-y-0 active:scale-[0.98]"
-                                  >
-                                    Atender
-                                  </button>
-                                )}
-                              </td>
-                            </tr>
-                          );
-                        })
-                      ) : (
-                        <tr>
-                          <td
-                            colSpan={4}
-                            className="px-5 py-12 text-center text-sm text-gray-400"
+                        return (
+                          <tr
+                            key={agendamento.id}
+                            className="border-b border-[#C8D9E8] transition-colors duration-200 hover:bg-[#F8FBFE]"
                           >
-                            Nenhum agendamento encontrado para hoje.
-                          </td>
-                        </tr>
-                      )}
+                            <td className="px-5 py-3 text-[13px]">
+                              {agendamento.horario.slice(0, 5)}
+                            </td>
+
+                            <td className="px-5 py-3 text-[13px]">
+                              {agendamento.nomeAluno}
+                            </td>
+
+                            <td className="px-5 py-3">
+                              <StatusBadge status={statusExibido} />
+                            </td>
+
+                            <td className="px-5 py-2 text-center">
+                              {jaPossuiAtendimento ? (
+                                <span className="inline-flex rounded-lg bg-gray-100 px-4 py-2 text-xs font-semibold text-gray-500">
+                                  Atendido
+                                </span>
+                              ) : (
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    atenderAgendamento(agendamento)
+                                  }
+                                  className="cursor-pointer rounded-lg bg-[#FF681D] px-4 py-2 text-sm font-extrabold text-white shadow-sm transition-all duration-200 hover:-translate-y-[1px] hover:bg-[#E95A0D] hover:shadow-md active:translate-y-0 active:scale-[0.98]"
+                                >
+                                  Atender
+                                </button>
+                              )}
+                            </td>
+                          </tr>
+                        );
+                      })
+                    ) : (
+                      <tr>
+                        <td
+                          colSpan={4}
+                          className="px-5 py-12 text-center text-sm text-gray-400"
+                        >
+                          Nenhum agendamento encontrado para hoje.
+                        </td>
+                      </tr>
+                    )}
                   </tbody>
                 </table>
               </div>
@@ -407,7 +407,7 @@ function StatusBadge({ status }: { status: string }) {
 
   if (statusNormalizado === "em andamento") {
     return (
-      <span className="inline-flex rounded-full bg-[#FFE5D4] px-3 py-1 text-[12px] text-[#FF681D]">
+      <span className="inline-flex rounded-full bg-[#2563EB] px-3 py-1 text-[12px] font-bold text-white">
         {status}
       </span>
     );
@@ -418,7 +418,7 @@ function StatusBadge({ status }: { status: string }) {
     statusNormalizado === "com pendencia"
   ) {
     return (
-      <span className="inline-flex rounded-full bg-[#FFD8DB] px-3 py-1 text-[12px] text-[#E32E3D]">
+      <span className="inline-flex rounded-full bg-[#D97706] px-3 py-1 text-[12px] font-bold text-white">
         {status}
       </span>
     );
@@ -426,7 +426,7 @@ function StatusBadge({ status }: { status: string }) {
 
   if (statusNormalizado === "concluído" || statusNormalizado === "concluido") {
     return (
-      <span className="inline-flex rounded-full bg-[#D9F0E1] px-4 py-1 text-[12px] text-[#26804A]">
+      <span className="inline-flex rounded-full bg-[#16A34A] px-4 py-1 text-[12px] font-bold text-white">
         {status}
       </span>
     );
@@ -434,14 +434,14 @@ function StatusBadge({ status }: { status: string }) {
 
   if (statusNormalizado === "agendado" || statusNormalizado === "confirmado") {
     return (
-      <span className="inline-flex rounded-full bg-[#DCEBFA] px-4 py-1 text-[12px] text-[#064F91]">
+      <span className="inline-flex rounded-full bg-[#0B5598] px-4 py-1 text-[12px] font-bold text-white">
         {status}
       </span>
     );
   }
 
   return (
-    <span className="inline-flex rounded-full bg-gray-100 px-4 py-1 text-[12px] text-gray-600">
+    <span className="inline-flex rounded-full bg-[#64748B] px-4 py-1 text-[12px] font-bold text-white">
       {status}
     </span>
   );

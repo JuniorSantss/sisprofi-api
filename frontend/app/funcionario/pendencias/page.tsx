@@ -158,7 +158,7 @@ export default function PendenciasPage() {
           <div className="absolute left-0 top-0 z-20 h-full w-[14px] bg-[#FF681D]" />
 
           <div className="relative z-10 flex h-full flex-col px-6 pt-10 xl:px-8 xl:pt-12">
-            <h1 className="ml-2 text-xl font-extrabold text-[#FF681D] xl:text-2xl">
+            <h1 className="ml-2 text-xl font-extrabold text-white xl:text-2xl">
               PROUNI E FIES
             </h1>
 
@@ -411,33 +411,55 @@ function MenuButton({
 }
 
 function StatusBadge({ status }: { status: string }) {
-  const normalizado = status.trim().toLowerCase();
-
-  if (normalizado === "concluída" || normalizado === "concluida") {
+  if (status === "Em andamento") {
     return (
-      <span className="inline-flex rounded-full bg-[#D9F0E1] px-4 py-1 text-[12px] font-medium text-[#26804A]">
-        {status}
+      <span className="inline-flex rounded-full bg-[#2563EB] px-3 py-1 text-[11px] font-bold text-white">
+        Em andamento
       </span>
     );
   }
 
-  if (normalizado === "em análise" || normalizado === "em analise") {
+  if (status === "Com pendência") {
     return (
-      <span className="inline-flex rounded-full bg-[#FFE3D0] px-4 py-1 text-[12px] font-medium text-[#FF681D]">
-        {status}
+      <span className="inline-flex rounded-full bg-[#D97706] px-3 py-1 text-[11px] font-bold text-white">
+        Com pendência
+      </span>
+    );
+  }
+
+  if (status === "Concluído") {
+    return (
+      <span className="inline-flex rounded-full bg-[#16A34A] px-3 py-1 text-[11px] font-bold text-white">
+        Concluído
+      </span>
+    );
+  }
+
+  if (status === "Concluída") {
+    return (
+      <span className="inline-flex rounded-full bg-[#16A34A] px-3 py-1 text-[11px] font-bold text-white">
+        Concluída
+      </span>
+    );
+  }
+
+  if (status === "Aberta") {
+    return (
+      <span className="inline-flex rounded-full bg-[#DC2626] px-3 py-1 text-[11px] font-bold text-white">
+        Aberta
       </span>
     );
   }
 
   return (
-    <span className="inline-flex rounded-full bg-[#FFD8DB] px-4 py-1 text-[12px] font-medium text-[#E32E3D]">
+    <span className="inline-flex rounded-full bg-[#64748B] px-3 py-1 text-[11px] font-bold text-white">
       {status}
     </span>
   );
 }
 
 /* =========================
-   ÍCONES
+  ÍCONES
 ========================= */
 
 function HomeIcon() {
