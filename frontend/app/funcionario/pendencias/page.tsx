@@ -64,6 +64,14 @@ export default function PendenciasPage() {
   const [erro, setErro] = useState("");
   const [sucesso, setSucesso] = useState("");
 
+  const [modalListaPendencias, setModalListaPendencias] = useState(false);
+
+  const [alunoPendenciasModal, setAlunoPendenciasModal] = useState<{
+    nomeAluno: string;
+    cpfAluno: string;
+    pendencias: PendenciaTela[];
+  } | null>(null);
+
   async function carregarDados() {
     try {
       setCarregando(true);
@@ -126,6 +134,37 @@ export default function PendenciasPage() {
 
     return pendencias.filter((pendencia) => pendencia.status === filtroStatus);
   }, [pendencias, filtroStatus]);
+
+  const pendenciasAgrupadasPorAluno = useMemo(() => {
+    const grupos = new Map<
+      string,
+      {
+        nomeAluno: string;
+        cpfAluno: string;
+        pendencias: PendenciaTela[];
+      }
+    >();
+
+    pendenciasFiltradas.forEach((pendencia) => {
+      const cpf = pendencia.cpfAluno;
+
+      if (!grupos.has(cpf)) {
+        grupos.set(cpf, {
+          nomeAluno: pendencia.nomeAluno,
+          cpfAluno: pendencia.cpfAluno,
+          pendencias: [],
+        });
+      }
+
+      grupos.get(cpf)?.pendencias.push(pendencia);
+    });
+
+    grupos.forEach((grupo) => {
+      grupo.pendencias.sort((a, b) => b.id - a.id);
+    });
+
+    return Array.from(grupos.values());
+  }, [pendenciasFiltradas]);
 
   function pendenciaEstaConcluida(status: string) {
     const normalizado = status.trim().toLowerCase();
@@ -286,66 +325,56 @@ export default function PendenciasPage() {
                   <div className="py-12 text-center text-sm text-[#064F91]">
                     Carregando pendências...
                   </div>
-                ) : pendenciasFiltradas.length > 0 ? (
+                ) : pendenciasAgrupadasPorAluno.length > 0 ? (
                   <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
-                    {pendenciasFiltradas.map((pendencia) => {
-                      const concluida = pendenciaEstaConcluida(
-                        pendencia.status,
+                    {pendenciasAgrupadasPorAluno.map((grupo) => {
+                      const possuiPendenciaAberta = grupo.pendencias.some(
+                        (pendencia) =>
+                          !pendenciaEstaConcluida(pendencia.status),
                       );
 
                       return (
                         <article
-                          key={pendencia.id}
-                          className={`rounded-xl border px-4 py-4 ${
-                            concluida
-                              ? "border-[#B8C6D3] bg-[#F8FAFC]"
+                          key={grupo.cpfAluno}
+                          className={`rounded-xl border px-5 py-4 ${
+                            filtroStatus === "Aberta"
+                              ? "border-[#DC2626] bg-white"
                               : "border-[#2E71B8] bg-white"
                           }`}
                         >
                           <div className="flex items-start justify-between gap-4">
                             <div>
-                              <h3 className="text-base font-black text-[#064F91]">
-                                {pendencia.nomeAluno}
+                              <h3 className="text-lg font-black text-[#064F91]">
+                                {grupo.nomeAluno}
                               </h3>
 
                               <p className="mt-1 text-sm text-[#6A8198]">
-                                CPF: {pendencia.cpfAluno}
+                                CPF: {grupo.cpfAluno}
                               </p>
                             </div>
 
-                            <StatusBadge status={pendencia.status} />
+                            <span className="rounded-full bg-[#0B5598] px-3 py-1 text-xs font-bold text-white">
+                              {grupo.pendencias.length} pendência(s)
+                            </span>
                           </div>
 
-                          <div className="mt-4">
-                            <p className="text-xs font-bold uppercase tracking-wide text-[#6A8198]">
-                              Descrição
-                            </p>
+                          {filtroStatus === "Aberta" &&
+                            possuiPendenciaAberta && (
+                              <div className="mt-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm font-bold text-red-600">
+                                Este aluno possui pendência aberta.
+                              </div>
+                            )}
 
-                            <p className="mt-1 text-sm font-semibold text-[#064F91]">
-                              {pendencia.descricao}
-                            </p>
-                          </div>
-
-                          <div className="mt-3">
-                            <p className="text-xs font-bold uppercase tracking-wide text-[#6A8198]">
-                              Data
-                            </p>
-
-                            <p className="mt-1 text-sm font-semibold text-[#064F91]">
-                              {formatarData(pendencia.data_criacao)}
-                            </p>
-                          </div>
                           <div className="mt-4 flex justify-end">
                             <button
                               type="button"
-                              onClick={() =>
-                                router.push(
-                                  `/funcionario/atendimentos?atendimento=${pendencia.atendimento}`,
-                                )
-                              }
-                              className="h-[38px] cursor-pointer rounded-lg border border-[#2E71B8] bg-white px-4 text-sm font-extrabold text-[#064F91] transition-all duration-200 hover:bg-[#F3F8FD]"
+                              onClick={() => {
+                                setAlunoPendenciasModal(grupo);
+                                setModalListaPendencias(true);
+                              }}
+                              className="h-[40px] cursor-pointer rounded-lg bg-[#FF681D] px-5 text-sm font-extrabold text-white transition hover:bg-[#E95A0D]"
                             >
-                              Ver atendimento
+                              Ver pendências
                             </button>
                           </div>
                         </article>
@@ -376,6 +405,77 @@ export default function PendenciasPage() {
           </div>
         </section>
       </div>
+
+      {modalListaPendencias && alunoPendenciasModal && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/55 px-4"
+          onClick={() => setModalListaPendencias(false)}
+        >
+          <div
+            className="max-h-[85vh] w-full max-w-[700px] overflow-y-auto rounded-2xl bg-white p-7 shadow-2xl"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <h3 className="text-2xl font-black text-[#064F91]">
+                  Pendências de {alunoPendenciasModal.nomeAluno}
+                </h3>
+
+                <p className="mt-1 text-sm text-[#6A8198]">
+                  CPF: {alunoPendenciasModal.cpfAluno}
+                </p>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setModalListaPendencias(false)}
+                className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-full text-2xl text-[#064F91] hover:bg-[#F0F4F8]"
+              >
+                ×
+              </button>
+            </div>
+
+            <div className="my-5 border-t border-[#D6E2EE]" />
+
+            <div className="flex flex-col gap-3">
+              {alunoPendenciasModal.pendencias.map((pendencia) => (
+                <div
+                  key={pendencia.id}
+                  className="rounded-xl border border-[#D6E2EE] bg-[#F8FBFE] p-4"
+                >
+                  <div className="flex items-start justify-between gap-4">
+                    <div>
+                      <p className="text-sm font-black text-[#064F91]">
+                        {pendencia.descricao}
+                      </p>
+
+                      <p className="mt-1 text-xs text-[#6A8198]">
+                        {formatarData(pendencia.data_criacao)}
+                      </p>
+                    </div>
+
+                    <StatusBadge status={pendencia.status} />
+                  </div>
+
+                  <div className="mt-4 flex justify-end">
+                    <button
+                      type="button"
+                      onClick={() =>
+                        router.push(
+                          `/funcionario/atendimentos?atendimento=${pendencia.atendimento}`,
+                        )
+                      }
+                      className="h-[38px] cursor-pointer rounded-lg border border-[#2E71B8] bg-white px-4 text-sm font-extrabold text-[#064F91] transition hover:bg-[#F3F8FD]"
+                    >
+                      Ver atendimento
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
     </main>
   );
 }
