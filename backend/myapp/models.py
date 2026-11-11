@@ -13,6 +13,14 @@ class Programa(models.Model):
 
 
 class Aluno(models.Model):
+    usuario = models.OneToOneField(
+        User,
+        on_delete=models.CASCADE,
+        related_name="aluno",
+        null=True,
+        blank=True,
+    )
+
     cpf_aluno = models.CharField(max_length=11, primary_key=True)
     nome = models.CharField(max_length=100)
     contato = models.CharField(max_length=15)
@@ -21,7 +29,6 @@ class Aluno(models.Model):
 
     def __str__(self):
         return self.nome
-
 
 class Funcionario(models.Model):
     usuario = models.OneToOneField(

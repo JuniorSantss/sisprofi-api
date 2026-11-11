@@ -1,4 +1,5 @@
 from rest_framework import serializers
+from django.contrib.auth.models import User
 
 from myapp.models import (
     Aluno,
@@ -35,6 +36,40 @@ class AlunoSerializer(serializers.ModelSerializer):
             'nomes_programas'
         ]
 
+class CadastroAlunoSerializer(serializers.ModelSerializer):
+    username = serializers.CharField(write_only=True)
+    password = serializers.CharField(write_only=True)
+
+    class Meta:
+        model = Aluno
+        fields = [
+            'cpf_aluno',
+            'nome',
+            'contato',
+            'curso',
+            'programas',
+            'username',
+            'password',
+        ]
+
+    def create(self, validated_data):
+        username = validated_data.pop('username')
+        password = validated_data.pop('password')
+        programas = validated_data.pop('programas', [])
+
+        usuario = User.objects.create_user(
+            username=username,
+            password=password,
+        )
+
+        aluno = Aluno.objects.create(
+            usuario=usuario,
+            **validated_data,
+        )
+
+        aluno.programas.set(programas)
+
+        return aluno
 
 class FuncionarioSerializer(serializers.ModelSerializer):
     class Meta:
