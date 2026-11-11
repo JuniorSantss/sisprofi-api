@@ -1,4 +1,4 @@
-const API_URL = "http://192.168.0.3:8000/api/v1";
+const API_URL = "http://192.168.1.160:8000/api/v1";
 
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
@@ -32,6 +32,38 @@ export async function loginAluno(username: string, password: string) {
   }
 
   return dados;
+}
+
+export async function cadastrarAluno(dados: {
+  cpf_aluno: string;
+  nome: string;
+  contato: string;
+  curso: string;
+  programas: number[];
+  username: string;
+  password: string;
+}) {
+  const response = await fetch(`${API_URL}/alunos/cadastro/`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(dados),
+  });
+
+  const resposta = await response.json();
+
+  if (!response.ok) {
+    const primeiraMensagem = Object.values(resposta)?.[0];
+
+    if (Array.isArray(primeiraMensagem)) {
+      throw new Error(primeiraMensagem[0]);
+    }
+
+    throw new Error("Não foi possível realizar o cadastro.");
+  }
+
+  return resposta;
 }
 
 export async function criarAgendamento(dados: {
@@ -68,4 +100,16 @@ export async function criarAgendamento(dados: {
   }
 
   return resposta;
+}
+
+export async function listarProgramas() {
+  const response = await fetch(`${API_URL}/programas/`);
+
+  const dados = await response.json();
+
+  if (!response.ok) {
+    throw new Error("Não foi possível carregar os programas.");
+  }
+
+  return dados;
 }

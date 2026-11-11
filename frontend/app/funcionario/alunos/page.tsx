@@ -33,7 +33,13 @@ export default function AlunosPage() {
 
         const dados = await buscarAlunos();
 
-        setAlunos(dados);
+        const alunosOrdenados = [...dados].sort(
+          (a, b) =>
+            new Date(b.data_criacao).getTime() -
+            new Date(a.data_criacao).getTime(),
+        );
+
+        setAlunos(alunosOrdenados);
       } catch (error) {
         setErro(
           error instanceof Error

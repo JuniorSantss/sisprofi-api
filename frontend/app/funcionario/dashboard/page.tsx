@@ -130,12 +130,21 @@ export default function DashboardPage() {
         id: agendamento.id,
         horario: agendamento.horario,
         aluno: aluno?.nome || agendamento.aluno,
+        motivo: agendamento.motivo,
 
         status: atendimento ? atendimento.status : agendamento.status,
       };
     });
 
-    return lista.sort((a, b) => a.horario.localeCompare(b.horario));
+    return lista.sort((a, b) => {
+      const aConcluido = a.status === "Concluído";
+      const bConcluido = b.status === "Concluído";
+
+      if (aConcluido && !bConcluido) return 1;
+      if (!aConcluido && bConcluido) return -1;
+
+      return a.horario.localeCompare(b.horario);
+    });
   }, [agendamentosHoje, alunos, atendimentos]);
 
   return (
@@ -278,6 +287,10 @@ export default function DashboardPage() {
                       </th>
 
                       <th className="px-5 py-3 text-[13px] font-medium">
+                        Motivo
+                      </th>
+
+                      <th className="px-5 py-3 text-[13px] font-medium">
                         Status
                       </th>
                     </tr>
@@ -287,7 +300,7 @@ export default function DashboardPage() {
                     {carregando ? (
                       <tr>
                         <td
-                          colSpan={3}
+                          colSpan={4}
                           className="px-5 py-12 text-center text-sm text-[#064F91]"
                         >
                           Carregando dados...
@@ -307,6 +320,10 @@ export default function DashboardPage() {
                             {item.aluno}
                           </td>
 
+                          <td className="px-5 py-3 text-[13px]">
+                            {item.motivo}
+                          </td>
+
                           <td className="px-5 py-3">
                             <StatusBadge status={item.status} />
                           </td>
@@ -315,7 +332,7 @@ export default function DashboardPage() {
                     ) : (
                       <tr>
                         <td
-                          colSpan={3}
+                          colSpan={4}
                           className="px-5 py-12 text-center text-sm text-gray-400"
                         >
                           Nenhum agendamento registrado para hoje.

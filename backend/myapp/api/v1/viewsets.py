@@ -66,7 +66,12 @@ class AlunoViewSet(viewsets.ModelViewSet):
 class ProgramaViewSet(viewsets.ModelViewSet):
     queryset = Programa.objects.all()
     serializer_class = ProgramaSerializer
-    permission_classes = [IsAuthenticated]
+
+    def get_permissions(self):
+        if self.action == "list":
+            return [AllowAny()]
+
+        return [IsAuthenticated()]
 
 
 class AgendamentoViewSet(viewsets.ModelViewSet):

@@ -101,7 +101,27 @@ export default function AgendamentosPage() {
   const agendamentosHoje = useMemo(() => {
     return agendamentos
       .filter((agendamento) => agendamento.data === hoje)
-      .sort((a, b) => a.horario.localeCompare(b.horario));
+      .sort((a, b) => {
+        const atendimentoA = atendimentos.find(
+          (item) => item.agendamento === a.id,
+        );
+
+        const atendimentoB = atendimentos.find(
+          (item) => item.agendamento === b.id,
+        );
+
+        const statusA = atendimentoA ? atendimentoA.status : a.status;
+
+        const statusB = atendimentoB ? atendimentoB.status : b.status;
+
+        const aConcluido = statusA === "Concluído";
+        const bConcluido = statusB === "Concluído";
+
+        if (aConcluido && !bConcluido) return 1;
+        if (!aConcluido && bConcluido) return -1;
+
+        return a.horario.localeCompare(b.horario);
+      });
   }, [agendamentos, hoje]);
 
   async function atenderAgendamento(agendamento: Agendamento) {
@@ -274,6 +294,10 @@ export default function AgendamentosPage() {
                       </th>
 
                       <th className="px-5 py-3 text-[13px] font-medium">
+                        Motivo
+                      </th>
+
+                      <th className="px-5 py-3 text-[13px] font-medium">
                         Status
                       </th>
 
@@ -327,6 +351,10 @@ export default function AgendamentosPage() {
 
                             <td className="px-5 py-3 text-[13px]">
                               {agendamento.nomeAluno}
+                            </td>
+
+                            <td className="max-w-[220px] truncate px-5 py-3 text-[13px]">
+                              {agendamento.motivo}
                             </td>
 
                             <td className="px-5 py-3">
