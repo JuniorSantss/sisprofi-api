@@ -50,35 +50,17 @@ async function apiRequest(endpoint: string, options: RequestInit = {}) {
       throw new Error(dados.detail);
     }
 
-    if (dados?.non_field_errors) {
-      throw new Error(
-        Array.isArray(dados.non_field_errors)
-          ? dados.non_field_errors.join(" ")
-          : dados.non_field_errors,
-      );
+    if (dados?.non_field_errors?.length) {
+      throw new Error(dados.non_field_errors[0]);
     }
 
-    if (dados && typeof dados === "object") {
-      const mensagens = Object.entries(dados)
-        .map(([campo, valor]) => {
-          if (Array.isArray(valor)) {
-            return `${campo}: ${valor.join(" ")}`;
-          }
+    const primeiroErro = Object.values(dados || {})[0];
 
-          return `${campo}: ${String(valor)}`;
-        })
-        .join(" ");
-
-      if (mensagens) {
-        throw new Error(mensagens);
-      }
+    if (Array.isArray(primeiroErro) && primeiroErro.length > 0) {
+      throw new Error(String(primeiroErro[0]));
     }
 
-    if (typeof dados === "string") {
-      throw new Error(dados);
-    }
-
-    throw new Error("Erro ao acessar a API.");
+    throw new Error("Não foi possível concluir a operação.");
   }
 
   return dados;
@@ -153,6 +135,10 @@ export async function buscarFuncionarioLogado() {
 
 export async function buscarAtendimentos() {
   return apiRequest("/atendimentos/");
+}
+
+export async function buscarAtendimentoPorId(id: number) {
+  return apiRequest(`/atendimentos/${id}/`);
 }
 
 export async function criarAtendimento(dados: {

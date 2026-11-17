@@ -140,9 +140,7 @@ export default function AgendamentosPage() {
       );
 
       if (atendimentoExistente) {
-        router.push(
-          `/funcionario/atendimentos?atendimento=${atendimentoExistente.id}`,
-        );
+        router.push(`/funcionario/atendimentos/${atendimentoExistente.id}`);
         return;
       }
 
@@ -154,9 +152,7 @@ export default function AgendamentosPage() {
         status: "Em andamento",
       });
 
-      router.push(
-        `/funcionario/atendimentos?atendimento=${novoAtendimento.id}`,
-      );
+      router.push(`/funcionario/atendimentos/${novoAtendimento.id}`);
     } catch (error) {
       setErro(
         error instanceof Error
