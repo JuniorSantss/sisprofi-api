@@ -19,12 +19,15 @@ export default function LoginScreen() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [carregando, setCarregando] = useState(false);
+  const [erro, setErro] = useState("");
 
   async function entrar() {
     if (!username.trim() || !password.trim()) {
       Alert.alert("Atenção", "Informe usuário e senha.");
       return;
     }
+
+    setErro("");
 
     try {
       setCarregando(true);
@@ -38,14 +41,13 @@ export default function LoginScreen() {
 
       router.replace("/agendamento");
     } catch (error) {
-      Alert.alert(
-        "Erro",
+      console.error("ERRO NO LOGIN:", error);
+
+      setErro(
         error instanceof Error
           ? error.message
           : "Não foi possível realizar o login.",
       );
-    } finally {
-      setCarregando(false);
     }
   }
 
@@ -70,6 +72,19 @@ export default function LoginScreen() {
         onChangeText={setPassword}
         secureTextEntry
       />
+
+      {erro ? (
+        <Text
+          style={{
+            color: "red",
+            marginBottom: 12,
+            textAlign: "center",
+            fontWeight: "600",
+          }}
+        >
+          {erro}
+        </Text>
+      ) : null}
 
       <TouchableOpacity
         style={styles.botao}

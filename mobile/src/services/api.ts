@@ -1,6 +1,10 @@
-const API_URL = "http://192.168.1.160:8000/api/v1";
-
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { Platform } from "react-native";
+
+const API_URL =
+  Platform.OS === "web"
+    ? "http://localhost:8000/api/v1"
+    : "http://192.168.0.3:8000/api/v1";
 
 export async function loginAluno(username: string, password: string) {
   const response = await fetch(`${API_URL}/token/`, {
