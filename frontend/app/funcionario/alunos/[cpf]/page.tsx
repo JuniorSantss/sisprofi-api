@@ -222,9 +222,13 @@ export default function DetalhesAlunoPage() {
                 <button
                   type="button"
                   onClick={() => router.push("/funcionario/alunos")}
-                  className="mb-4 inline-flex cursor-pointer items-center gap-2 text-sm font-semibold text-[#064F91] transition hover:text-[#FF681D]"
+                  style={{
+                    border: "2px solid #064F91",
+                  }}
+                  className="mb-4 inline-flex cursor-pointer items-center gap-2 rounded-lg bg-white px-5 py-3 text-base font-bold text-[#064F91] shadow-sm transition-all duration-200 hover:bg-[#F0F7FD] hover:text-[#FF681D] hover:shadow-md active:scale-[0.98]"
                 >
-                  ← Voltar para alunos
+                  <span className="text-lg">←</span>
+                  Voltar para alunos
                 </button>
 
                 <h2 className="text-3xl font-black leading-tight tracking-tight text-[#064F91] xl:text-4xl">

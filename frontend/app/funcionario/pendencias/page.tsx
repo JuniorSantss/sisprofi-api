@@ -132,7 +132,19 @@ export default function PendenciasPage() {
       return pendencias;
     }
 
-    return pendencias.filter((pendencia) => pendencia.status === filtroStatus);
+    if (filtroStatus === "Abertas") {
+      return pendencias.filter(
+        (pendencia) => !pendenciaEstaConcluida(pendencia.status),
+      );
+    }
+
+    if (filtroStatus === "Concluídas") {
+      return pendencias.filter((pendencia) =>
+        pendenciaEstaConcluida(pendencia.status),
+      );
+    }
+
+    return pendencias;
   }, [pendencias, filtroStatus]);
 
   const pendenciasAgrupadasPorAluno = useMemo(() => {
@@ -274,31 +286,53 @@ export default function PendenciasPage() {
             <section className="mt-7 flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl border border-[#0B5598] bg-white p-4 sm:p-5">
               {/* ABAS */}
 
-              <div className="shrink-0 border-b border-[#D6E2EE]">
-                <div className="flex gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setFiltroStatus("Aberta")}
-                    className={`border-b-2 px-4 py-3 text-sm font-extrabold transition ${
-                      filtroStatus === "Aberta"
-                        ? "border-[#FF681D] text-[#064F91]"
-                        : "border-transparent text-[#6A8198] hover:text-[#064F91]"
-                    }`}
-                  >
-                    Abertas ({quantidadeAbertas})
-                  </button>
+              <div className="mb-8 flex justify-center">
+                <div className="inline-flex flex-wrap items-center justify-center gap-3 rounded-2xl bg-white p-2 shadow-sm">
+                  {["Abertas", "Concluídas"].map((item) => {
+                    const ativo = filtroStatus === item;
 
-                  <button
-                    type="button"
-                    onClick={() => setFiltroStatus("Concluída")}
-                    className={`border-b-2 px-4 py-3 text-sm font-extrabold transition ${
-                      filtroStatus === "Concluída"
-                        ? "border-[#FF681D] text-[#064F91]"
-                        : "border-transparent text-[#6A8198] hover:text-[#064F91]"
-                    }`}
-                  >
-                    Concluídas ({quantidadeConcluidas})
-                  </button>
+                    const quantidade =
+                      item === "Abertas"
+                        ? pendencias.filter(
+                            (pendencia) =>
+                              pendencia.status.trim().toLowerCase() ===
+                              "aberta",
+                          ).length
+                        : pendencias.filter(
+                            (pendencia) =>
+                              pendencia.status.trim().toLowerCase() ===
+                              "concluída",
+                          ).length;
+
+                    return (
+                      <button
+                        key={item}
+                        type="button"
+                        onClick={() => setFiltroStatus(item)}
+                        className={`relative inline-flex min-w-[160px] cursor-pointer items-center justify-center rounded-xl px-5 py-3 text-sm font-extrabold transition-all duration-200 ${
+                          ativo
+                            ? "bg-[#064F91] text-white shadow-md"
+                            : "bg-[#F3F8FD] text-[#064F91] hover:bg-[#E4EFF8]"
+                        }`}
+                      >
+                        <span>{item}</span>
+
+                        <span
+                          className={`ml-2 rounded-full px-2 py-0.5 text-xs font-black ${
+                            ativo
+                              ? "bg-white/20 text-white"
+                              : "bg-white text-[#064F91]"
+                          }`}
+                        >
+                          {quantidade}
+                        </span>
+
+                        {ativo && (
+                          <span className="absolute bottom-0 left-0 h-1 w-full rounded-b-xl bg-[#FF681D]" />
+                        )}
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
 
@@ -315,8 +349,6 @@ export default function PendenciasPage() {
                   {sucesso}
                 </div>
               )}
-
-              {/* TABELA */}
 
               {/* CARDS */}
 
@@ -462,7 +494,7 @@ export default function PendenciasPage() {
                       type="button"
                       onClick={() =>
                         router.push(
-                          `/funcionario/atendimentos?atendimento=${pendencia.atendimento}`,
+                          `/funcionario/atendimentos/${pendencia.atendimento}`,
                         )
                       }
                       className="h-[38px] cursor-pointer rounded-lg border border-[#2E71B8] bg-white px-4 text-sm font-extrabold text-[#064F91] transition hover:bg-[#F3F8FD]"

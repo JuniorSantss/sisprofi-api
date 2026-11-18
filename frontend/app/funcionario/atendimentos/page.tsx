@@ -61,9 +61,9 @@ type Pendencia = {
 
 export default function AtendimentosPage() {
   console.log("PÁGINA DE ATENDIMENTOS CARREGOU");
+
   const router = useRouter();
   const searchParams = useSearchParams();
-  const atendimentoIdUrl = searchParams.get("atendimento");
 
   const idAgendamentoUrl = searchParams.get("agendamento");
 
@@ -76,18 +76,11 @@ export default function AtendimentosPage() {
 
   const [filtroStatus, setFiltroStatus] = useState("Em andamento");
 
-  const [modalDetalhes, setModalDetalhes] = useState(false);
-  const [modalPendencia, setModalPendencia] = useState(false);
-  const [modalStatus, setModalStatus] = useState(false);
   const [modalConfirmarConclusao, setModalConfirmarConclusao] = useState(false);
   const [atendimentoParaConcluir, setAtendimentoParaConcluir] =
     useState<Atendimento | null>(null);
 
   const [nomeAlunoParaConcluir, setNomeAlunoParaConcluir] = useState("");
-
-  const [atendimentoModal, setAtendimentoModal] = useState<Atendimento | null>(
-    null,
-  );
 
   const [modalListaAtendimentos, setModalListaAtendimentos] = useState(false);
   const [alunoAtendimentosModal, setAlunoAtendimentosModal] = useState<
@@ -146,18 +139,6 @@ export default function AtendimentosPage() {
       setAtendimentos(atendimentosOrdenados);
       setFuncionarioLogado(dadosFuncionarios);
       setPendencias(pendenciasOrdenadas);
-
-      setAtendimentoModal((atual) => {
-        if (!atual) {
-          return atual;
-        }
-
-        const atendimentoAtualizado = atendimentosOrdenados.find(
-          (item) => item.id === atual.id,
-        );
-
-        return atendimentoAtualizado || atual;
-      });
 
       if (idAgendamentoUrl) {
         const agendamentoUrl = dadosAgendamentos.find(
@@ -361,39 +342,6 @@ export default function AtendimentosPage() {
     return Array.from(grupos.values());
   }, [atendimentosFiltrados]);
 
-  const dadosAtendimentoModal = useMemo(() => {
-    if (!atendimentoModal) {
-      return null;
-    }
-
-    const agendamentoRelacionado = agendamentos.find(
-      (item) => item.id === atendimentoModal.agendamento,
-    );
-
-    if (!agendamentoRelacionado) {
-      return null;
-    }
-
-    const alunoRelacionado = alunos.find(
-      (item) => item.cpf_aluno === agendamentoRelacionado.aluno,
-    );
-
-    if (!alunoRelacionado) {
-      return null;
-    }
-
-    const pendenciasRelacionadas = pendencias
-      .filter((item) => item.atendimento === atendimentoModal.id)
-      .sort((a, b) => b.id - a.id);
-
-    return {
-      atendimento: atendimentoModal,
-      agendamento: agendamentoRelacionado,
-      aluno: alunoRelacionado,
-      pendencias: pendenciasRelacionadas,
-    };
-  }, [atendimentoModal, agendamentos, alunos, pendencias]);
-
   const alunosComAtendimentoAtivo = useMemo(() => {
     return atendimentosAtivos
       .map((atendimento) => {
@@ -596,115 +544,6 @@ export default function AtendimentosPage() {
 
   const editandoAtendimento = atendimentoSelecionadoId !== null;
 
-  async function salvarPendenciaModal() {
-    setErro("");
-    setSucesso("");
-
-    if (!atendimentoModal) {
-      setErro("Nenhum atendimento selecionado.");
-      return;
-    }
-
-    if (!descricaoPendencia.trim()) {
-      setErro("Informe a descrição da pendência.");
-      return;
-    }
-
-    try {
-      setSalvando(true);
-
-      await criarPendencia({
-        atendimento: atendimentoModal.id,
-        descricao: descricaoPendencia.trim(),
-        status: "Aberta",
-        data_criacao: obterDataHoje(),
-      });
-
-      setDescricaoPendencia("");
-      setModalPendencia(false);
-
-      // Atualiza o atendimento dentro do modal
-      setAtendimentoModal((atual) =>
-        atual
-          ? {
-              ...atual,
-              status: "Com pendência",
-            }
-          : atual,
-      );
-
-      // Atualiza também o card da lista
-      setAtendimentos((atuais) =>
-        atuais.map((atendimento) =>
-          atendimento.id === atendimentoModal.id
-            ? {
-                ...atendimento,
-                status: "Com pendência",
-              }
-            : atendimento,
-        ),
-      );
-
-      setFiltroStatus("Com pendência");
-
-      setModalDetalhes(true);
-
-      setSucesso("Pendência registrada com sucesso.");
-
-      await carregarDados();
-    } catch (error) {
-      setErro(
-        error instanceof Error
-          ? error.message
-          : "Não foi possível registrar a pendência.",
-      );
-    } finally {
-      setSalvando(false);
-    }
-  }
-
-  async function salvarStatusModal() {
-    setErro("");
-    setSucesso("");
-
-    if (!atendimentoModal) {
-      setErro("Nenhum atendimento selecionado.");
-      return;
-    }
-
-    try {
-      setSalvando(true);
-
-      await atualizarAtendimento(atendimentoModal.id, {
-        status,
-        descricao: atendimentoModal.descricao,
-      });
-
-      setAtendimentoModal((atual) =>
-        atual
-          ? {
-              ...atual,
-              status,
-            }
-          : atual,
-      );
-
-      setSucesso("Status atualizado com sucesso.");
-
-      setModalStatus(false);
-
-      await carregarDados();
-    } catch (error) {
-      setErro(
-        error instanceof Error
-          ? error.message
-          : "Não foi possível atualizar o status.",
-      );
-    } finally {
-      setSalvando(false);
-    }
-  }
-
   useEffect(() => {
     async function carregarFuncionarioLogado() {
       try {
@@ -717,19 +556,6 @@ export default function AtendimentosPage() {
 
     carregarFuncionarioLogado();
   }, []);
-
-  useEffect(() => {
-    if (!atendimentoIdUrl) return;
-
-    const atendimentoEncontrado = atendimentos.find(
-      (item) => item.id === Number(atendimentoIdUrl),
-    );
-
-    if (!atendimentoEncontrado) return;
-
-    setAtendimentoModal(atendimentoEncontrado);
-    setModalDetalhes(true);
-  }, [atendimentoIdUrl, atendimentos]);
 
   console.log(
     "STATUS DOS ATENDIMENTOS:",
@@ -759,6 +585,7 @@ export default function AtendimentosPage() {
     atendimento: Atendimento,
     nomeAluno: string,
   ) {
+    setErro("");
     setAtendimentoParaConcluir(atendimento);
     setNomeAlunoParaConcluir(nomeAluno);
     setModalConfirmarConclusao(true);
@@ -775,13 +602,6 @@ export default function AtendimentosPage() {
   const quantidadeConcluidos = cardsAtendimentos.filter(
     (card) => card?.atendimento.status === "Concluído",
   ).length;
-
-  function fecharModalDetalhes() {
-    setModalDetalhes(false);
-    setAtendimentoModal(null);
-
-    router.replace("/funcionario/atendimentos");
-  }
 
   async function concluirPendenciaModal(pendenciaId: number) {
     try {
@@ -925,42 +745,47 @@ export default function AtendimentosPage() {
                   Atendimentos
                 </h3>
 
-                <div className="mt-4 flex gap-2 border-b border-[#D6E2EE]">
-                  <button
-                    type="button"
-                    onClick={() => setFiltroStatus("Em andamento")}
-                    className={`border-b-2 px-4 py-3 text-sm font-extrabold transition ${
-                      filtroStatus === "Em andamento"
-                        ? "border-[#FF681D] text-[#064F91]"
-                        : "border-transparent text-[#6A8198] hover:text-[#064F91]"
-                    }`}
-                  >
-                    Em andamento ({quantidadeEmAndamento})
-                  </button>
+                <div className="mb-8 flex justify-center">
+                  <div className="inline-flex flex-wrap items-center justify-center gap-3 rounded-2xl bg-white p-2 shadow-sm">
+                    {["Em andamento", "Com pendência", "Concluído"].map(
+                      (item) => {
+                        const ativo = filtroStatus === item;
 
-                  <button
-                    type="button"
-                    onClick={() => setFiltroStatus("Com pendência")}
-                    className={`border-b-2 px-4 py-3 text-sm font-extrabold transition ${
-                      filtroStatus === "Com pendência"
-                        ? "border-[#FF681D] text-[#064F91]"
-                        : "border-transparent text-[#6A8198] hover:text-[#064F91]"
-                    }`}
-                  >
-                    Com pendência ({quantidadeComPendencia})
-                  </button>
+                        return (
+                          <button
+                            key={item}
+                            type="button"
+                            onClick={() => setFiltroStatus(item)}
+                            className={`relative inline-flex min-w-[150px] cursor-pointer items-center justify-center rounded-xl px-5 py-3 text-sm font-extrabold transition-all duration-200 ${
+                              ativo
+                                ? "bg-[#064F91] text-white shadow-md"
+                                : "bg-[#F3F8FD] text-[#064F91] hover:bg-[#E4EFF8]"
+                            }`}
+                          >
+                            <span>{item}</span>
 
-                  <button
-                    type="button"
-                    onClick={() => setFiltroStatus("Concluído")}
-                    className={`border-b-2 px-4 py-3 text-sm font-extrabold transition ${
-                      filtroStatus === "Concluído"
-                        ? "border-[#FF681D] text-[#064F91]"
-                        : "border-transparent text-[#6A8198] hover:text-[#064F91]"
-                    }`}
-                  >
-                    Concluídos ({quantidadeConcluidos})
-                  </button>
+                            <span
+                              className={`ml-2 rounded-full px-2 py-0.5 text-xs font-black ${
+                                ativo
+                                  ? "bg-white/20 text-white"
+                                  : "bg-white text-[#064F91]"
+                              }`}
+                            >
+                              {
+                                atendimentos.filter(
+                                  (atendimento) => atendimento.status === item,
+                                ).length
+                              }
+                            </span>
+
+                            {ativo && (
+                              <span className="absolute bottom-0 left-0 h-1 w-full rounded-b-xl bg-[#FF681D]" />
+                            )}
+                          </button>
+                        );
+                      },
+                    )}
+                  </div>
                 </div>
               </div>
 
@@ -1114,51 +939,13 @@ export default function AtendimentosPage() {
 
                           <div className="mt-3 flex flex-wrap gap-2">
                             <AcaoCard
-                              texto="Ver detalhes"
-                              onClick={() => {
-                                setModalPendencia(false);
-                                setAtendimentoModal(atendimento);
-                                setModalDetalhes(true);
-                              }}
+                              texto="Ver atendimento"
+                              onClick={() =>
+                                router.push(
+                                  `/funcionario/atendimentos/${atendimento.id}`,
+                                )
+                              }
                             />
-
-                            {atendimento.status === "Concluído" && (
-                              <AcaoCard
-                                texto="Reabrir atendimento"
-                                onClick={() => {
-                                  setAtendimentoModal(atendimento);
-                                  setStatus("Em andamento");
-                                  setModalStatus(true);
-                                }}
-                              />
-                            )}
-
-                            {atendimento.status !== "Concluído" && (
-                              <AcaoCard
-                                texto="Adicionar pendência"
-                                onClick={() => {
-                                  setModalStatus(false);
-                                  setAtendimentoModal(atendimento);
-                                  setDescricaoPendencia("");
-                                  setModalPendencia(true);
-                                }}
-                              />
-                            )}
-
-                            {atendimento.status !== "Concluído" && (
-                              <button
-                                type="button"
-                                onClick={() =>
-                                  abrirConfirmacaoConclusao(
-                                    atendimento,
-                                    aluno.nome,
-                                  )
-                                }
-                                className="flex h-[38px] cursor-pointer items-center justify-center rounded-lg bg-[#FF681D] px-5 text-xs font-extrabold text-white transition-all duration-200 hover:bg-[#E95A0D]"
-                              >
-                                Concluir
-                              </button>
-                            )}
                           </div>
                         </article>
                       );
@@ -1170,203 +957,6 @@ export default function AtendimentosPage() {
           </div>
         </section>
       </div>
-
-      {/* MODAL DETALHES */}
-
-      {modalDetalhes && dadosAtendimentoModal && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/55 px-4"
-          onClick={fecharModalDetalhes}
-        >
-          <div
-            className="max-h-[90vh] w-full max-w-[650px] overflow-y-auto rounded-2xl bg-white p-7 shadow-2xl"
-            onClick={(event) => event.stopPropagation()}
-          >
-            {/* CABEÇALHO */}
-
-            <div className="flex items-start justify-between gap-4">
-              <div>
-                <h3 className="text-2xl font-black text-[#064F91]">
-                  Detalhes do atendimento
-                </h3>
-
-                <p className="mt-1 text-sm text-[#064F91]">
-                  Visualize os dados do atendimento selecionado.
-                </p>
-              </div>
-
-              <button
-                type="button"
-                onClick={fecharModalDetalhes}
-                className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-full text-2xl text-[#064F91] transition-all duration-200 hover:bg-[#F0F4F8] hover:shadow-sm"
-              >
-                ×
-              </button>
-            </div>
-
-            <div className="my-5 border-t border-[#D6E2EE]" />
-
-            {/* DADOS */}
-
-            <div className="grid grid-cols-1 gap-x-8 gap-y-5 sm:grid-cols-2">
-              <DetalheModal
-                label="Aluno"
-                valor={dadosAtendimentoModal.aluno.nome}
-              />
-
-              <DetalheModal
-                label="Responsável"
-                valor={funcionarioLogado?.nome || "Não identificado"}
-              />
-
-              <DetalheModal
-                label="Programa"
-                valor={dadosAtendimentoModal.aluno.nomes_programas.join(", ")}
-              />
-
-              <DetalheModal
-                label="CPF"
-                valor={dadosAtendimentoModal.aluno.cpf_aluno}
-              />
-
-              <DetalheModal
-                label="Curso"
-                valor={dadosAtendimentoModal.aluno.curso}
-              />
-
-              <DetalheModal
-                label="Motivo"
-                valor={dadosAtendimentoModal.agendamento.motivo}
-              />
-
-              <DetalheModal
-                label="Descrição"
-                valor={dadosAtendimentoModal.atendimento.descricao}
-              />
-
-              <DetalheModal
-                label="Agendamento"
-                valor={`${formatarData(
-                  dadosAtendimentoModal.agendamento.data,
-                )} às ${dadosAtendimentoModal.agendamento.horario.slice(0, 5)}`}
-              />
-
-              <div>
-                <p className="text-xs font-medium text-[#064F91]">Status</p>
-
-                <div className="mt-2">
-                  <StatusBadge
-                    status={dadosAtendimentoModal.atendimento.status}
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* PENDÊNCIAS */}
-
-            <div className="mt-6 border-t border-[#D6E2EE] pt-5">
-              <p className="text-xs font-medium text-[#064F91]">Pendências</p>
-
-              {dadosAtendimentoModal.pendencias.length === 0 ? (
-                <p className="mt-2 text-sm text-[#064F91]">
-                  Nenhuma pendência registrada.
-                </p>
-              ) : (
-                <div className="mt-3 space-y-3">
-                  {dadosAtendimentoModal.pendencias.map((pendencia) => {
-                    const pendenciaAberta =
-                      pendencia.status.trim().toLowerCase() === "aberta";
-
-                    return (
-                      <div
-                        key={pendencia.id}
-                        className="flex items-center justify-between gap-4 rounded-lg border border-[#D6E2EE] bg-[#F8FBFE] px-4 py-3"
-                      >
-                        <div className="min-w-0 flex-1">
-                          <p className="text-sm font-bold text-[#064F91]">
-                            {pendencia.descricao}
-                          </p>
-
-                          <div className="mt-2">
-                            <StatusBadge status={pendencia.status} />
-                          </div>
-                        </div>
-
-                        {pendenciaAberta && (
-                          <button
-                            type="button"
-                            onClick={() => concluirPendenciaModal(pendencia.id)}
-                            className="shrink-0 cursor-pointer rounded-lg bg-[#FF681D] px-4 py-2 text-xs font-extrabold text-white transition-all duration-200 hover:bg-[#E95A0D]"
-                          >
-                            Concluir pendência
-                          </button>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
-
-            {/* AÇÕES */}
-
-            <div className="mt-6 flex items-center justify-between gap-4">
-              <button
-                type="button"
-                onClick={fecharModalDetalhes}
-                className="h-[44px] cursor-pointer rounded-lg border border-[#2E71B8] bg-white px-8 text-sm font-extrabold text-[#064F91] transition-all duration-200 hover:bg-[#F3F8FD]"
-              >
-                Fechar
-              </button>
-
-              <div className="flex items-center gap-3">
-                {dadosAtendimentoModal.atendimento.status !== "Concluído" && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setAtendimentoModal(dadosAtendimentoModal.atendimento);
-                      setDescricaoPendencia("");
-                      setModalPendencia(true);
-                    }}
-                    className="h-[44px] cursor-pointer rounded-lg border border-[#2E71B8] bg-white px-6 text-sm font-extrabold text-[#064F91] transition-all duration-200 hover:bg-[#F3F8FD]"
-                  >
-                    Adicionar pendência
-                  </button>
-                )}
-
-                {dadosAtendimentoModal.atendimento.status === "Concluído" && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setAtendimentoModal(dadosAtendimentoModal.atendimento);
-                      setStatus("Em andamento");
-                      setModalStatus(true);
-                    }}
-                    className="h-[44px] cursor-pointer rounded-lg border border-[#2E71B8] bg-white px-6 text-sm font-extrabold text-[#064F91] transition-all duration-200 hover:bg-[#F3F8FD]"
-                  >
-                    Reabrir atendimento
-                  </button>
-                )}
-
-                {dadosAtendimentoModal.atendimento.status !== "Concluído" && (
-                  <button
-                    type="button"
-                    onClick={() =>
-                      abrirConfirmacaoConclusao(
-                        dadosAtendimentoModal.atendimento,
-                        dadosAtendimentoModal.aluno.nome,
-                      )
-                    }
-                    className="h-[44px] cursor-pointer rounded-lg bg-[#FF681D] px-7 text-sm font-extrabold text-white transition-all duration-200 hover:bg-[#E95A0D]"
-                  >
-                    Concluir atendimento
-                  </button>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
 
       {modalConfirmarConclusao && atendimentoParaConcluir && (
         <div
@@ -1385,6 +975,12 @@ export default function AtendimentosPage() {
               Tem certeza que deseja concluir o atendimento de{" "}
               <span className="font-bold">{nomeAlunoParaConcluir}</span>?
             </p>
+
+            {erro && (
+              <div className="mt-4 rounded-lg border border-red-300 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">
+                {erro}
+              </div>
+            )}
 
             <div className="mt-6 flex justify-end gap-3">
               <button
@@ -1412,7 +1008,6 @@ export default function AtendimentosPage() {
                     console.log("ATENDIMENTO CONCLUÍDO");
 
                     setModalConfirmarConclusao(false);
-                    setModalDetalhes(false);
 
                     setSucesso(
                       `Atendimento de ${nomeAlunoParaConcluir} concluído com sucesso.`,
@@ -1435,205 +1030,6 @@ export default function AtendimentosPage() {
                 className="h-[42px] cursor-pointer rounded-lg bg-[#FF681D] px-6 text-sm font-extrabold text-white hover:bg-[#E95A0D]"
               >
                 Confirmar conclusão
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* MODAL ADICIONAR PENDÊNCIA */}
-
-      {modalPendencia && atendimentoModal && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/55 px-4"
-          onClick={() => {
-            setModalPendencia(false);
-            setDescricaoPendencia("");
-          }}
-        >
-          <div
-            className="w-full max-w-[560px] rounded-2xl bg-white p-7 shadow-2xl"
-            onClick={(event) => event.stopPropagation()}
-          >
-            {/* CABEÇALHO */}
-
-            <div className="flex items-start justify-between gap-4">
-              <div>
-                <h3 className="text-2xl font-black text-[#064F91]">
-                  Adicionar pendência
-                </h3>
-
-                <p className="mt-1 text-sm text-[#064F91]">
-                  Registre uma pendência para este atendimento.
-                </p>
-              </div>
-
-              <button
-                type="button"
-                onClick={() => {
-                  setModalPendencia(false);
-                  setDescricaoPendencia("");
-                }}
-                className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-full text-2xl text-[#064F91] transition-all duration-200 hover:bg-[#F0F4F8] hover:shadow-sm"
-              >
-                ×
-              </button>
-            </div>
-
-            <div className="my-5 border-t border-[#D6E2EE]" />
-            {erro && (
-              <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-600">
-                {erro}
-              </div>
-            )}
-
-            {/* IDENTIFICAÇÃO */}
-
-            {dadosAtendimentoModal && (
-              <div className="rounded-xl border border-[#D6E2EE] bg-[#F8FBFE] px-4 py-3">
-                <p className="text-xs text-[#064F91]">Atendimento de</p>
-
-                <p className="mt-1 text-base font-black text-[#064F91]">
-                  {dadosAtendimentoModal.aluno.nome}
-                </p>
-
-                <p className="mt-1 text-xs text-[#064F91]">
-                  {dadosAtendimentoModal.aluno.nomes_programas.join(", ")}
-                </p>
-              </div>
-            )}
-
-            {/* CAMPO */}
-
-            <div className="mt-5">
-              <label className="mb-2 block text-sm font-semibold text-[#064F91]">
-                Descrição da pendência
-              </label>
-
-              <textarea
-                value={descricaoPendencia}
-                onChange={(event) => setDescricaoPendencia(event.target.value)}
-                placeholder="Descreva a pendência do aluno..."
-                rows={5}
-                autoFocus
-                className="w-full resize-none rounded-xl border border-[#2E71B8] bg-white px-4 py-3 text-sm text-[#064F91] outline-none placeholder:text-[#8DAAC4] focus:ring-2 focus:ring-[#2E71B8]/20"
-              />
-            </div>
-
-            {/* BOTÕES */}
-
-            <div className="mt-6 flex justify-end gap-3">
-              <button
-                type="button"
-                onClick={() => {
-                  setModalPendencia(false);
-                  setDescricaoPendencia("");
-                }}
-                className="h-[44px] cursor-pointer rounded-lg border border-[#2E71B8] bg-white px-7 text-sm font-extrabold text-[#064F91] transition-all duration-200 hover:-translate-y-[1px] hover:bg-[#F3F8FD] hover:shadow-md active:scale-[0.98]"
-              >
-                Cancelar
-              </button>
-
-              <button
-                type="button"
-                onClick={salvarPendenciaModal}
-                disabled={salvando || !descricaoPendencia.trim()}
-                className="h-[44px] cursor-pointer rounded-lg bg-[#FF681D] px-7 text-sm font-extrabold text-white shadow-sm transition-all duration-200 hover:-translate-y-[1px] hover:bg-[#E95A0D] hover:shadow-md active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                {salvando ? "Salvando..." : "Salvar pendência"}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* MODAL ATUALIZAR STATUS */}
-
-      {modalStatus && atendimentoModal && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/55 px-4"
-          onClick={() => {
-            setModalStatus(false);
-          }}
-        >
-          <div
-            className="w-full max-w-[520px] rounded-2xl bg-white p-7 shadow-2xl"
-            onClick={(event) => event.stopPropagation()}
-          >
-            <div className="flex items-start justify-between gap-4">
-              <div>
-                <h3 className="text-2xl font-black text-[#064F91]">
-                  Atualizar status
-                </h3>
-
-                <p className="mt-1 text-sm text-[#064F91]">
-                  Altere o status do atendimento selecionado.
-                </p>
-              </div>
-
-              <button
-                type="button"
-                onClick={() => {
-                  setModalStatus(false);
-                }}
-                className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-full text-2xl text-[#064F91] transition-all duration-200 hover:bg-[#F0F4F8]"
-              >
-                ×
-              </button>
-            </div>
-
-            <div className="my-5 border-t border-[#D6E2EE]" />
-
-            {dadosAtendimentoModal && (
-              <div className="rounded-xl border border-[#D6E2EE] bg-[#F8FBFE] px-4 py-3">
-                <p className="text-xs text-[#064F91]">Atendimento de</p>
-
-                <p className="mt-1 text-base font-black text-[#064F91]">
-                  {dadosAtendimentoModal.aluno.nome}
-                </p>
-
-                <p className="mt-1 text-xs text-[#064F91]">
-                  Status atual: {dadosAtendimentoModal.atendimento.status}
-                </p>
-              </div>
-            )}
-
-            <div className="mt-5">
-              <label className="mb-2 block text-sm font-semibold text-[#064F91]">
-                Novo status
-              </label>
-
-              <select
-                value={status}
-                onChange={(event) => setStatus(event.target.value)}
-                className="h-[48px] w-full cursor-pointer rounded-lg border border-[#2E71B8] bg-white px-4 text-sm text-[#064F91] outline-none"
-              >
-                <option value="Em andamento">Em andamento</option>
-
-                {atendimentoModal.status !== "Concluído" && (
-                  <option value="Concluído">Concluído</option>
-                )}
-              </select>
-            </div>
-
-            <div className="mt-6 flex justify-end gap-3">
-              <button
-                type="button"
-                onClick={() => {
-                  setModalStatus(false);
-                }}
-                className="h-[44px] cursor-pointer rounded-lg border border-[#2E71B8] bg-white px-7 text-sm font-extrabold text-[#064F91] transition-all duration-200 hover:-translate-y-[1px] hover:bg-[#F3F8FD] hover:shadow-md"
-              >
-                Cancelar
-              </button>
-
-              <button
-                type="button"
-                onClick={salvarStatusModal}
-                disabled={salvando}
-                className="h-[44px] cursor-pointer rounded-lg bg-[#FF681D] px-7 text-sm font-extrabold text-white transition-all duration-200 hover:-translate-y-[1px] hover:bg-[#E95A0D] hover:shadow-md disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                {salvando ? "Salvando..." : "Atualizar status"}
               </button>
             </div>
           </div>
@@ -1706,9 +1102,10 @@ export default function AtendimentosPage() {
                       <button
                         type="button"
                         onClick={() => {
-                          setAtendimentoModal(atendimento);
                           setModalListaAtendimentos(false);
-                          setModalDetalhes(true);
+                          router.push(
+                            `/funcionario/atendimentos/${atendimento.id}`,
+                          );
                         }}
                         className="h-[38px] cursor-pointer rounded-lg border border-[#2E71B8] bg-white px-4 text-xs font-extrabold text-[#064F91] hover:bg-[#F3F8FD]"
                       >
@@ -1727,16 +1124,6 @@ export default function AtendimentosPage() {
 }
 
 /* COMPONENTES */
-
-function DetalheModal({ label, valor }: { label: string; valor: string }) {
-  return (
-    <div>
-      <p className="text-xs font-medium text-[#064F91]">{label}</p>
-
-      <p className="mt-1 text-base font-bold text-[#064F91]">{valor || "-"}</p>
-    </div>
-  );
-}
 
 function CampoLeitura({ label, valor }: { label: string; valor: string }) {
   return (

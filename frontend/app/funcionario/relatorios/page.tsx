@@ -357,19 +357,19 @@ export default function RelatoriosPage() {
             {/* CARDS */}
             <section className="mt-3 grid shrink-0 grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
               <ResumoCard
-                titulo="Agendamentos"
+                titulo="Agendamentos totais"
                 valor={carregando ? 0 : agendamentosFiltrados.length}
                 icon={<CalendarBlueIcon />}
               />
 
               <ResumoCard
-                titulo="Atendimentos"
-                valor={carregando ? 0 : atendimentosFiltrados.length}
+                titulo="Atendimentos concluídos"
+                valor={carregando ? 0 : atendimentosConcluidos.length}
                 icon={<AttendanceGreenIcon />}
               />
 
               <ResumoCard
-                titulo="Pendências"
+                titulo="Pendências abertas"
                 valor={carregando ? 0 : pendenciasAbertas.length}
                 icon={<AlertOrangeIcon />}
               />

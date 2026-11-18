@@ -15,7 +15,7 @@ export default function SenhaAlteradaPage() {
           <div className="absolute left-0 top-0 h-full w-[14px] bg-[#FF681D]" />
 
           <div className="relative z-10 px-10 pt-12 xl:px-14 xl:pt-14">
-            <p className="text-lg font-extrabold tracking-wide text-[#FF681D] xl:text-xl">
+            <p className="text-lg font-extrabold tracking-wide text-white xl:text-xl">
               PROUNI E FIES
             </p>
 
